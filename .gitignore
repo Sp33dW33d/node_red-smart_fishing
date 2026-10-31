@@ -1,0 +1,9 @@
+# Local environment values and credentials
+.env
+
+# Node-RED runtime state and generated credential files
+node-red/.config.*
+node-red/flows_cred.json
+node-red/lib/
+node-red/node_modules/
+node-red/.sessions.json

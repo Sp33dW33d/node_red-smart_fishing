@@ -2,8 +2,8 @@
 
 ## Phase 1: Foundation & Setup
 - [x] Task 1.1: Initialize git repository structure.
-- [ ] Task 1.2: Configure `compose.yaml`, `.env.example`, and Node-RED user directory settings.
-- [ ] Task 1.3: Verify standard local container execution via Docker Compose.
+- [x] Task 1.2: Configure `compose.yaml`, `.env.example`, and Node-RED user directory settings.
+- [x] Task 1.3: Verify standard local container execution via Docker Compose.
 
 ## Phase 2: Ingestion Pipeline Development
 - [ ] Task 2.1: Implement HTTP Request flow to fetch atmospheric data (e.g., OpenWeatherMap API).

@@ -1,0 +1,18 @@
+services:
+  node-red:
+    image: nodered/node-red:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${PORT:-1880}:1880"
+    environment:
+      TZ: ${TZ:-Asia/Calcutta}
+      FLOWS: flows/smart-fishing.json
+      NODE_RED_CREDENTIAL_SECRET: ${NODE_RED_CREDENTIAL_SECRET:?Set NODE_RED_CREDENTIAL_SECRET in .env}
+      WEATHER_API_KEY: ${WEATHER_API_KEY:-}
+      WEATHER_API_URL: ${WEATHER_API_URL:-https://api.openweathermap.org/data/2.5/weather}
+      MQTT_BROKER_HOST: ${MQTT_BROKER_HOST:-mosquitto}
+      MQTT_BROKER_PORT: ${MQTT_BROKER_PORT:-1883}
+      MQTT_TOPIC_PREFIX: ${MQTT_TOPIC_PREFIX:-smartfishing}
+    volumes:
+      - ./node-red:/data
+      - ./flows:/data/flows
