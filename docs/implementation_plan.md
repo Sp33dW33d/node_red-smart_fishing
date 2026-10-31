@@ -1,26 +1,38 @@
-# Implementation & Development Plan
+# Implementation Plan
 
-## Phase 1: Foundation & Setup
-- [x] Task 1.1: Initialize git repository structure.
-- [x] Task 1.2: Configure `compose.yaml`, `.env.example`, and Node-RED user directory settings.
-- [x] Task 1.3: Verify standard local container execution via Docker Compose.
+This checklist tracks repository state. A task is complete only when implementation exists and its stated verification has been performed.
 
-## Phase 2: Ingestion Pipeline Development
-- [ ] Task 2.1: Implement HTTP Request flow to fetch atmospheric data (e.g., OpenWeatherMap API).
-- [ ] Task 2.2: Implement HTTP Request flow to fetch oceanographic data.
-- [ ] Task 2.3: Build Function/Change nodes to parse and sanitize HTTP JSON responses.
+## Phase 1: Foundation and setup
 
-## Phase 3: MQTT Sensor Integration
-- [ ] Task 3.1: Configure Mosquitto broker service in Docker Compose.
-- [ ] Task 3.2: Create Python emulator script (`scripts/simulate-mqtt.py`) publishing synthetic telemetry.
-- [ ] Task 3.3: Wire Node-RED MQTT input nodes to parse incoming topic messages.
+- [x] 1.1 Initialize repository structure and Git history.
+- [x] 1.2 Configure Docker Compose, environment example, and Node-RED settings.
+- [x] 1.3 Run the project with Docker Compose.
 
-## Phase 4: UI & Dashboard Assembly
-- [ ] Task 4.1: Construct Overview, Environment, and Water condition UI tabs.
-- [ ] Task 4.2: Connect validated signals to gauges, line graphs, and numeric cards.
-- [ ] Task 4.3: Implement error handling logic and stale data indicator visual flags.
+## Phase 2: Environmental API ingestion
 
-## Phase 5: Packaging & Testing
-- [ ] Task 5.1: Export final complete flow to `flows/smart-fishing.json`.
-- [ ] Task 5.2: Test clean project deployment on an isolated host using setup documentation.
-- [ ] Task 5.3: Ensure repository cleanliness (secrets check, `.gitignore` validation).
+- [x] 2.1 Fetch current weather and daily rainfall from Open-Meteo Forecast API.
+- [x] 2.2 Fetch marine hourly values from Open-Meteo Marine API.
+- [x] 2.3 Validate response structures and normalize data in Function nodes.
+- [x] 2.4 Format request and validation failures for inspection.
+- [x] 2.5 Verify live normalized outputs for the Sassoon Dock sample coordinates.
+
+## Phase 3: MQTT sensor integration
+
+- [ ] 3.1 Add and configure a Mosquitto broker service.
+- [ ] 3.2 Implement a Python telemetry publisher and declare/pin its required packages.
+- [ ] 3.3 Define MQTT topic and message schema; wire and validate Node-RED MQTT inputs.
+- [ ] 3.4 Verify simulated telemetry reaches the normalized downstream flow.
+
+## Phase 4: Dashboard
+
+- [ ] 4.1 Select and pin a maintained dashboard UI package compatible with the selected runtime.
+- [ ] 4.2 Build overview, weather, and water condition views.
+- [ ] 4.3 Connect normalized data to appropriate gauges, charts, and summary values.
+- [ ] 4.4 Show API failures, missing values, and stale-data state in the UI.
+
+## Phase 5: Packaging and release checks
+
+- [ ] 5.1 Export the complete working flow to `flows/smart-fishing.json`.
+- [ ] 5.2 Follow setup documentation on a clean environment and record the result.
+- [ ] 5.3 Check tracked files for secrets, ignored runtime data, and stack consistency.
+- [ ] 5.4 Update specifications and architecture documentation to describe the completed application.

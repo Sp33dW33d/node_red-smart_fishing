@@ -1,137 +1,24 @@
-# Smart Fishing — IoT & Data Monitoring Dashboard
+# Contributor and Automation Directives
 
-**Course:** IND4 Assignment
+Use these project-specific rules when making changes with a coding assistant or by hand.
 
-**Primary Platform:** Node-RED
+## Source of truth
 
-**Project Type:** IoT / Environmental & Data Monitoring Dashboard
+- `flows/smart-fishing.json` defines deployed flow behavior.
+- `compose.yaml`, `.env.example`, `node-red/package.json`, and `node-red/settings.js` define the runtime, dependencies, and configuration.
+- `docs/implementation_plan.md` defines phase status. Mark a task complete only after the feature exists and its verification has been performed.
+- The README, specification, architecture, and technology stack documents must describe current behavior accurately and label planned work as planned.
 
-Smart Fishing is an interactive Node-RED data-monitoring dashboard that collects environmental, weather, water, and catch-related information from online APIs and optional MQTT sensors. It transforms raw data into real-time visualisations including line charts, bar charts, gauges, and summary indicators.
+## Implementation conventions
 
-## Features
+- Keep credentials and machine-specific settings in the ignored `.env`; document variable names and safe defaults in `.env.example`.
+- Preserve normalized message contracts and topics unless intentionally changing them; update dependent nodes and documentation together.
+- Validate external data before downstream use. Represent unavailable measurements explicitly and preserve useful provider timestamps.
+- Keep request construction, HTTP transport, normalization, and error reporting as understandable flow steps.
+- Add an npm or Python dependency only when implemented code uses it. Pin runtime/dependency versions and document their purpose.
+- Do not describe a dashboard, MQTT broker, simulator, chart, or sensor as implemented until its code and configuration exist.
+- Preserve local development security defaults: loopback binding and no secrets in tracked files.
 
-* **Multi-Source Ingestion:** Automated HTTP polling of weather, oceanographic, and marine APIs.
+## Change completion
 
-* **Optional Real-Time Ingestion (MQTT):** Live or simulated telemetry for water temperature, water level, and catch counters.
-
-* **Interactive Visualizations:** Gauges for immediate readings, line charts for trends, bar charts for categorical metrics, and numeric summary cards.
-
-* **Data Validation & Resiliency:** Graceful handling of API rate limits, missing fields, and connectivity loss without UI disruption.
-
-* **Containerized Deployment:** Pre-configured Docker Compose setup for portable, single-command deployment.
-
-## Tech Stack & Dependencies
-
-* **Runtime:** Node.js (v18+)
-
-* **Core Engine:** Node-RED (v3.0+)
-
-* **UI Framework:** `@node-red/node-red-dashboard`
-
-* **Protocols:** HTTP/HTTPS REST, MQTT (via Mosquitto Broker)
-
-* **Containerization:** Docker & Docker Compose
-
-* **Simulation Scripting:** Python 3 (for optional MQTT sensor emulator)
-
-## Project Structure
-
-```
-smart-fishing/
-├── README.md
-├── LICENSE
-├── .env.example
-├── compose.yaml
-├── flows/
-│   └── smart-fishing.json     # Node-RED flow definition
-├── node-red/
-│   ├── package.json           # Node-RED custom nodes/dependencies
-│   └── settings.js            # Node-RED configuration
-├── docs/
-│   ├── project_spec.md
-│   ├── architecture.md
-│   ├── tech_stack.md
-│   ├── implementation_plan.md
-│   └── chatgpt_codex.md
-└── scripts/
-    └── simulate-mqtt.py       # MQTT simulator script
-
-```
-
-## Quick Start (Docker Compose)
-
-### Prerequisites
-
-* [Docker Desktop](https://www.docker.com/) (v20.10+)
-
-* [Docker Compose](https://docs.docker.com/compose/) (v2.0+)
-
-### Setup & Run
-
-1. **Clone the repository:**
-
-   ```
-   git clone https://github.com/your-username/smart-fishing.git
-   cd smart-fishing
-   
-   ```
-
-2. **Configure Environment Variables:**
-
-   ```
-   cp .env.example .env
-   # Edit .env to add your API keys (e.g., OpenWeatherMap, Stormglass)
-   
-   ```
-
-3. **Launch Containers:**
-
-   ```
-   docker compose up -d
-   
-   ```
-
-4. **Access Applications:**
-
-   * **Node-RED Flow Editor:** <http://localhost:1880>
-
-   * **Smart Fishing UI:** <http://localhost:1880/ui>
-
-5. **Stop Containers:**
-
-   ```
-   docker compose down
-   
-   ```
-
-## Environment Variables Configuration
-
-Copy `.env.example` to `.env` and configure your API credentials and endpoints:
-
-```
-# Node-RED Configuration
-PORT=1880
-NODE_RED_CREDENTIAL_SECRET=your_secret_key_here
-
-# API Configuration
-WEATHER_API_KEY=your_weather_api_key
-WEATHER_API_URL=https://api.openweathermap.org/data/2.5/weather
-
-# MQTT Configuration (Optional)
-MQTT_BROKER_HOST=mosquitto
-MQTT_BROKER_PORT=1883
-MQTT_TOPIC_PREFIX=smartfishing
-
-```
-
-## Troubleshooting & FAQ
-
-* **Dashboard shows "Disconnected":** Ensure the Node-RED container is running via `docker compose logs -f node-red`.
-
-* **API Nodes returning 401/403:** Verify that your `.env` contains valid credentials and restart the container (`docker compose restart node-red`).
-
-* **MQTT Data Not Updating:** Ensure Mosquitto broker container is running and that `scripts/simulate-mqtt.py` is targeting the correct port (`1883`).
-
-## License & Attribution
-
-Distributed under the MIT License. Data sourced from public marine and weather API providers in accordance with their respective usage terms.
+Inspect the diff, validate edited JSON/YAML and flow references, and update relevant documentation and checklist items. For changes affecting the running flow, verify behavior through Node-RED and its Debug sidebar when the service is available. Do not commit or push unless requested.

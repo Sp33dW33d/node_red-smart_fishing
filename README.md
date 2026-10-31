@@ -1,126 +1,99 @@
-# Smart Fishing — IoT & Data Monitoring Dashboard
+# Smart Fishing
 
-**Course:** IND4 Assignment  
-**Primary Platform:** Node-RED  
-**Project Type:** IoT / Environmental & Data Monitoring Dashboard  
+Smart Fishing is an IND4 assignment project built with Node-RED. The current implementation is the Phase 2 environmental ingestion pipeline: it polls Open-Meteo weather and marine forecast APIs, validates and normalizes each response, and sends the results to Node-RED's Debug sidebar.
 
-Smart Fishing is an interactive Node-RED data-monitoring dashboard that collects environmental, weather, water, and catch-related information from online APIs and optional MQTT sensors. It transforms raw data into real-time visualisations including line charts, bar charts, gauges, and summary indicators.
+## Current status
 
----
+- Two API flows run on startup and every 15 minutes.
+- Weather output contains air temperature, wind speed, and up to five daily rainfall forecast values.
+- Marine output contains the nearest hourly sea-surface temperature, sea-level height relative to mean sea level, and wave height values available from the response.
+- API, HTTP, and validation failures are formatted into error messages and sent to the Debug sidebar.
+- The sample coordinates are Sassoon Dock, Colaba, Mumbai (`18.9110, 72.8253`). They are configurable and represent a forecast grid location near the harbor, not a dockside sensor.
+- MQTT ingestion and a user-facing dashboard are planned phases and are not implemented yet. The `/ui` path is not available in the current flow.
 
-## Features
-
-- **Multi-Source Ingestion:** Automated HTTP polling of weather, oceanographic, and marine APIs.
-- **Optional Real-Time Ingestion (MQTT):** Live or simulated telemetry for water temperature, water level, and catch counters.
-- **Interactive Visualizations:** Gauges for immediate readings, line charts for trends, bar charts for categorical metrics, and numeric summary cards.
-- **Data Validation & Resiliency:** Graceful handling of API rate limits, missing fields, and connectivity loss without UI disruption.
-- **Containerized Deployment:** Pre-configured Docker Compose setup for portable, single-command deployment.
-
----
-
-## Tech Stack & Dependencies
-
-- **Runtime:** Node.js (v18+)
-- **Core Engine:** Node-RED (v3.0+)
-- **UI Framework:** `@node-red/node-red-dashboard`
-- **Protocols:** HTTP/HTTPS REST, MQTT (via Mosquitto Broker)
-- **Containerization:** Docker & Docker Compose
-- **Simulation Scripting:** Python 3 (for optional MQTT sensor emulator)
-
----
-
-## Project Structure
+## Repository layout
 
 ```text
-smart-fishing/
+.
 ├── README.md
 ├── LICENSE
 ├── .env.example
 ├── compose.yaml
 ├── flows/
-│   └── smart-fishing.json     # Node-RED flow definition
+│   └── smart-fishing.json
 ├── node-red/
-│   ├── package.json           # Node-RED custom nodes/dependencies
-│   └── settings.js            # Node-RED configuration
+│   ├── package.json
+│   └── settings.js
 ├── docs/
-│   ├── project_spec.md
-│   ├── architecture.md
-│   ├── tech_stack.md
+│   ├── project_specification.md
+│   ├── system_architecture.md
+│   ├── technology_stack.md
 │   ├── implementation_plan.md
-│   └── chatgpt_codex.md
+│   └── chatgpt_codex_directives.md
 └── scripts/
-    └── simulate-mqtt.py       # MQTT simulator script
+    └── simulate-mqtt.py  # Phase 3 placeholder
 ```
 
----
+Node-RED's generated runtime configuration, credentials, and installed modules are stored under `node-red/` and ignored by Git where appropriate.
 
-## Quick Start (Docker Compose)
+## Requirements
 
-### Prerequisites
+- Docker Engine with the Docker Compose v2 plugin.
+- A working outbound HTTPS connection from the Node-RED container to Open-Meteo.
+- The Compose file pins `nodered/node-red:5.0.9`, matching the runtime used to verify the current flow.
 
-- [Docker Desktop](https://www.docker.com/) (v20.10+)
-- [Docker Compose](https://docs.docker.com/compose/) (v2.0+)
+No Open-Meteo API key is required for the configured forecast endpoints. Use coordinates appropriate to your forecast area; marine forecasts are model data and may not be available at every coordinate.
 
-### Setup & Run
+## Start the project
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/your-username/smart-fishing.git
-   cd smart-fishing
-   ```
+1. Copy the example environment file and replace the credential secret:
 
-2. **Configure Environment Variables:**
-   ```bash
+   ```sh
    cp .env.example .env
-   # Edit .env to add your API keys (e.g., OpenWeatherMap, Stormglass)
    ```
 
-3. **Launch Containers:**
-   ```bash
+   On PowerShell, use `Copy-Item .env.example .env`.
+
+2. Set `NODE_RED_CREDENTIAL_SECRET` in `.env` to a long, private value. Set `LOCATION_LATITUDE` and `LOCATION_LONGITUDE` to the desired location if needed. Set `PORT` if local port `1880` is already occupied.
+
+3. Start Node-RED:
+
+   ```sh
    docker compose up -d
    ```
 
-4. **Access Applications:**
-   - **Node-RED Flow Editor:** [http://localhost:1880](http://localhost:1880)
-   - **Smart Fishing UI:** [http://localhost:1880/ui](http://localhost:1880/ui)
+4. Open `http://localhost:<PORT>` (default `http://localhost:1880`). Open the **Environment Ingestion** tab and select the Debug sidebar to inspect normalized weather, marine, or error payloads. Both API flows trigger shortly after startup and repeat every 15 minutes.
 
-5. **Stop Containers:**
-   ```bash
+5. Stop the container while retaining its runtime data:
+
+   ```sh
    docker compose down
    ```
 
----
+The service is bound to `127.0.0.1` by default. It is intended for local development and is not configured for public exposure or authenticated remote access.
 
-## Environment Variables Configuration
+## Configuration
 
-Copy `.env.example` to `.env` and configure your API credentials and endpoints:
+| Variable | Default | Purpose |
+|---|---|---|
+| `PORT` | `1880` | Host port mapped to Node-RED's container port `1880`. |
+| `TZ` | `Asia/Calcutta` | Container timezone. |
+| `NODE_RED_CREDENTIAL_SECRET` | Required | Secret used by Node-RED to encrypt stored credentials. |
+| `NODE_RED_FORCE_IPV4` | `true` | Prefer IPv4 for outbound HTTPS; set to `false` if the Docker host has working IPv6 routing. |
+| `LOCATION_LATITUDE` | `18.9110` | Forecast latitude (Sassoon Dock sample). |
+| `LOCATION_LONGITUDE` | `72.8253` | Forecast longitude (Sassoon Dock sample). |
+| `WEATHER_API_URL` | Open-Meteo Forecast API | Weather endpoint. |
+| `MARINE_API_URL` | Open-Meteo Marine API | Marine endpoint. |
 
-```env
-# Node-RED Configuration
-PORT=1880
-TZ=Asia/Calcutta
-NODE_RED_CREDENTIAL_SECRET=replace_with_a_long_random_secret
+The local `.env` file is ignored by Git. Keep secrets out of the flow export and other tracked files.
 
-# API Configuration
-WEATHER_API_KEY=your_weather_api_key
-WEATHER_API_URL=https://api.openweathermap.org/data/2.5/weather
+## Troubleshooting
 
-# MQTT Configuration (Optional)
-MQTT_BROKER_HOST=mosquitto
-MQTT_BROKER_PORT=1883
-MQTT_TOPIC_PREFIX=smartfishing
-```
+- **Editor does not open:** Check `docker compose ps` and `docker compose logs --tail=100 node-red`. Confirm that the chosen host `PORT` is free.
+- **No normalized API messages:** Open the Debug sidebar, then inspect container logs and configured coordinates. The marine model may not return data for every location.
+- **HTTPS connection failures in WSL/Docker:** Keep `NODE_RED_FORCE_IPV4=true` when IPv6 resolves but is not routable from the container.
+- **A dashboard at `/ui` is missing:** This is expected until the dashboard phase adds dashboard nodes and an implemented UI flow.
 
----
+## Data attribution and license
 
-## Troubleshooting & FAQ
-
-* **Dashboard shows "Disconnected":** Ensure the Node-RED container is running via `docker compose logs -f node-red`.
-* **API Nodes returning 401/403:** Verify that your `.env` contains valid credentials and restart the container (`docker compose restart node-red`).
-* **MQTT Data Not Updating:** Ensure Mosquitto broker container is running and that `scripts/simulate-mqtt.py` is targeting the correct port (`1883`).
-
----
-
-## License & Attribution
-
-Distributed under the MIT License. Data sourced from public marine and weather API providers in accordance with their respective usage terms.
+Weather and marine forecast data come from [Open-Meteo](https://open-meteo.com/). See the [Forecast API](https://open-meteo.com/en/docs) and [Marine API](https://open-meteo.com/en/docs/marine-weather-api) documentation for variables, model sources, attribution, and usage terms. Project code is distributed under the MIT License; see [LICENSE](LICENSE).
