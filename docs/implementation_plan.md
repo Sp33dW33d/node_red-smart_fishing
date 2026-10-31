@@ -18,9 +18,11 @@ This checklist tracks repository state. A task is complete only when implementat
 
 ## Phase 3: MQTT sensor integration
 
-- [ ] 3.1 Add and configure a Mosquitto broker service.
-- [ ] 3.2 Implement a Python telemetry publisher and declare/pin its required packages.
-- [ ] 3.3 Define MQTT topic and message schema; wire and validate Node-RED MQTT inputs.
+- [x] 3.1 Add and configure a Mosquitto broker service in Docker Compose.
+- [ ] 3.1a Verify broker startup and local MQTT connectivity.
+- [x] 3.2 Implement a Python telemetry publisher and pin its MQTT client dependency.
+- [ ] 3.2a Install the dependency and verify messages reach a running broker.
+- [ ] 3.3 Add Node-RED MQTT inputs and normalize the simulator's documented topic/payload schema.
 - [ ] 3.4 Verify simulated telemetry reaches the normalized downstream flow.
 
 ## Phase 4: Dashboard

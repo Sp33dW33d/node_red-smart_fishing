@@ -1,6 +1,6 @@
 # Technology Stack
 
-This document records the current Phase 2 implementation. Future components are listed separately and are not installed or deployed yet.
+This document records the current Phase 2 API flow and the Phase 3.1–3.2 MQTT broker/publisher setup. Runtime MQTT publishing and Node-RED subscription verification are pending.
 
 ## Implemented stack
 
@@ -11,16 +11,17 @@ This document records the current Phase 2 implementation. Future components are 
 | Weather data | Open-Meteo Forecast API | Current air temperature and wind speed, plus five daily rainfall values. |
 | Marine data | Open-Meteo Marine API | Hourly sea-surface temperature, sea-level height, and wave height. |
 | Runtime configuration | Docker Compose and `.env` | Provides location, endpoints, timezone, credential secret, and IPv4 setting. |
+| MQTT broker | Eclipse Mosquitto `2.1.2-alpine` | Phase 3.1 broker service; persistent state uses a Docker named volume. |
+| MQTT publisher | Python 3.10+ and `paho-mqtt==2.1.0` | Phase 3.2 synthetic telemetry publisher in `scripts/simulate-mqtt.py`. |
 | Node types | Node-RED built-ins | Inject, Function, HTTP Request, Catch, and Debug. |
 
-`node-red/package.json` has no additional npm node dependencies. The current flow has no MQTT broker nodes, dashboard nodes, or third-party chart widgets.
+`node-red/package.json` has no additional npm node dependencies. The broker and publisher are configured, but the current Node-RED flow has no MQTT nodes yet. Dashboard nodes and third-party chart widgets are also absent.
 
-## Planned stack (not installed/configured yet)
+## Planned stack (not implemented yet)
 
 | Component | Planned use | Phase |
 |---|---|---|
-| MQTT broker and Node-RED MQTT nodes | Sensor telemetry ingestion | 3 |
-| Python MQTT publisher and its client dependency | Synthetic telemetry for development | 3 |
+| Node-RED MQTT nodes and broker integration flow | Consume sensor telemetry in the flow | 3.3 |
 | Node-RED dashboard UI nodes | Overview, weather, and water condition screens | 4 |
 
 Select and pin versions when planned dependencies are implemented. Draft dependency names and versions are not current requirements.

@@ -13,6 +13,23 @@ services:
       LOCATION_LONGITUDE: ${LOCATION_LONGITUDE:-72.8253}
       WEATHER_API_URL: ${WEATHER_API_URL:-https://api.open-meteo.com/v1/forecast}
       MARINE_API_URL: ${MARINE_API_URL:-https://marine-api.open-meteo.com/v1/marine}
+      MQTT_BROKER_HOST: ${MQTT_BROKER_HOST:-mosquitto}
+      MQTT_BROKER_PORT: ${MQTT_BROKER_PORT:-1883}
+      MQTT_TOPIC_PREFIX: ${MQTT_TOPIC_PREFIX:-smartfishing}
+    depends_on:
+      - mosquitto
     volumes:
       - ./node-red:/data
       - ./flows:/data/flows
+
+  mosquitto:
+    image: eclipse-mosquitto:2.1.2-alpine
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${MQTT_PORT:-1883}:1883"
+    volumes:
+      - ./mosquitto/config/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - mosquitto_data:/mosquitto/data
+
+volumes:
+  mosquitto_data:

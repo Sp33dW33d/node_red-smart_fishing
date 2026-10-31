@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Smart Fishing is an IND4 assignment being developed in phases as a Node-RED environmental monitoring application. The current deliverable is Phase 2: scheduled ingestion and normalization of Open-Meteo weather and marine forecast data for configurable coordinates. MQTT telemetry and a user-facing dashboard are planned work.
+Smart Fishing is an IND4 assignment being developed in phases as a Node-RED environmental monitoring application. Phase 2 implements scheduled Open-Meteo ingestion and normalization. Phase 3.1–3.2 add the local Mosquitto configuration and Python synthetic telemetry publisher; publishing and Node-RED MQTT subscription are pending runtime verification and Phase 3.3 work. A user-facing dashboard remains planned.
 
 ## Current implementation requirements (Phase 2)
 
@@ -14,12 +14,14 @@ Smart Fishing is an IND4 assignment being developed in phases as a Node-RED envi
 | P2-4 | Validate response structure, HTTP status, and required numeric values before emitting normalized data. | Implemented |
 | P2-5 | Emit timestamped normalized weather, marine, and error messages for inspection. | Implemented via Debug nodes |
 | P2-6 | Keep the Node-RED host port configurable and loopback-bound by default. | Implemented in Compose |
+| P3-1 | Provide a persistent local Mosquitto broker with a loopback-bound host port. | Configured in Compose; startup verification pending |
+| P3-2 | Provide a configurable Python publisher for synthetic MQTT telemetry. | Implemented; broker publish verification pending |
 
 ## Target requirements (not implemented yet)
 
 | ID | Target behavior | Planned phase |
 |---|---|---|
-| P3-1 | Accept real or simulated telemetry using documented MQTT topics and payload schema. | Phase 3 |
+| P3-3 | Subscribe to the telemetry topic in Node-RED and validate/normalize the payload. | Phase 3 |
 | P4-1 | Provide overview and weather/water dashboard views using validated messages. | Phase 4 |
 | P4-2 | Indicate API connectivity, missing values, and stale data in the UI. | Phase 4 |
 | P5-1 | Document and verify clean deployment of the completed implementation. | Phase 5 |
@@ -51,9 +53,14 @@ Smart Fishing is an IND4 assignment being developed in phases as a Node-RED envi
 - [x] Error paths format failures for Debug inspection.
 - [x] No API secrets are needed for the configured Open-Meteo endpoints.
 
+### Phase 3.1–3.2 (implemented; runtime verification pending)
+
+- [ ] Mosquitto starts and accepts a local MQTT connection; runtime verification pending.
+- [ ] Python simulator publishes telemetry to Mosquitto; runtime verification pending.
+
 ### Whole project (pending later phases)
 
-- [ ] MQTT broker, publisher/emulator, and Node-RED MQTT ingestion are configured and verified.
+- [ ] Node-RED MQTT ingestion is configured and verified against the simulator contract.
 - [ ] Dashboard views and widgets are connected to validated signals.
 - [ ] Stale-data and API-error states are visible to dashboard users.
 - [ ] Final deployment and repository hygiene are verified against the completed setup documentation.

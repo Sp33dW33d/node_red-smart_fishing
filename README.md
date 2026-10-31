@@ -8,6 +8,7 @@ Smart Fishing is an IND4 assignment project built with Node-RED. The current imp
 - Weather output contains air temperature, wind speed, and up to five daily rainfall forecast values.
 - Marine output contains the nearest hourly sea-surface temperature, sea-level height relative to mean sea level, and wave height values available from the response.
 - API, HTTP, and validation failures are formatted into error messages and sent to the Debug sidebar.
+- Phase 3.1 adds a Mosquitto MQTT broker service with persistent broker state. Phase 3.2 adds a Python simulator; Node-RED MQTT flow nodes are not implemented yet.
 - The sample coordinates are Sassoon Dock, Colaba, Mumbai (`18.9110, 72.8253`). They are configurable and represent a forecast grid location near the harbor, not a dockside sensor.
 - MQTT ingestion and a user-facing dashboard are planned phases and are not implemented yet. The `/ui` path is not available in the current flow.
 
@@ -24,6 +25,9 @@ Smart Fishing is an IND4 assignment project built with Node-RED. The current imp
 ├── node-red/
 │   ├── package.json
 │   └── settings.js
+├── mosquitto/
+│   └── config/
+│       └── mosquitto.conf
 ├── docs/
 │   ├── project_specification.md
 │   ├── system_architecture.md
@@ -31,7 +35,8 @@ Smart Fishing is an IND4 assignment project built with Node-RED. The current imp
 │   ├── implementation_plan.md
 │   └── chatgpt_codex_directives.md
 └── scripts/
-    └── simulate-mqtt.py  # Phase 3 placeholder
+    ├── simulate-mqtt.py
+    └── requirements.txt
 ```
 
 Node-RED's generated runtime configuration, credentials, and installed modules are stored under `node-red/` and ignored by Git where appropriate.
@@ -41,6 +46,8 @@ Node-RED's generated runtime configuration, credentials, and installed modules a
 - Docker Engine with the Docker Compose v2 plugin.
 - A working outbound HTTPS connection from the Node-RED container to Open-Meteo.
 - The Compose file pins `nodered/node-red:5.0.9`, matching the runtime used to verify the current flow.
+- The MQTT service uses the official Eclipse Mosquitto image `2.1.2-alpine`.
+- The telemetry publisher requires Python 3.10+ and the pinned `paho-mqtt` dependency in `scripts/requirements.txt`.
 
 No Open-Meteo API key is required for the configured forecast endpoints. Use coordinates appropriate to your forecast area; marine forecasts are model data and may not be available at every coordinate.
 
@@ -84,6 +91,29 @@ The service is bound to `127.0.0.1` by default. It is intended for local develop
 | `LOCATION_LONGITUDE` | `72.8253` | Forecast longitude (Sassoon Dock sample). |
 | `WEATHER_API_URL` | Open-Meteo Forecast API | Weather endpoint. |
 | `MARINE_API_URL` | Open-Meteo Marine API | Marine endpoint. |
+| `MQTT_PORT` | `1883` | Host port for the local Mosquitto listener, bound to loopback. |
+| `MQTT_BROKER_HOST` | `mosquitto` | Compose service hostname for clients in the Compose network. |
+| `MQTT_BROKER_PORT` | `1883` | Mosquitto listener port for Compose-network clients. |
+| `MQTT_TOPIC_PREFIX` | `smartfishing` | Root topic for simulated telemetry. |
+
+The broker currently allows anonymous MQTT connections for local assignment development. Its host port is bound to `127.0.0.1`; do not expose it publicly or reuse this authentication setting in a production deployment.
+
+## MQTT telemetry simulator
+
+The Phase 3.2 Python publisher sends synthetic data to `<MQTT_TOPIC_PREFIX>/<MQTT_DEVICE_ID>/telemetry` (defaults: `smartfishing/demo-01/telemetry`) at QoS 1 without retaining messages. The JSON payload includes a UTC timestamp, water temperature, water level, cumulative simulated catch count, and battery voltage. Generated values are for development only.
+
+After starting the Compose broker, create a virtual environment, install the pinned dependency, and run ten messages from the repository root.
+
+On macOS/Linux:
+
+```sh
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install -r scripts/requirements.txt
+python scripts/simulate-mqtt.py --host 127.0.0.1 --port 1883 --count 10
+```
+
+On PowerShell, use `py -m venv .venv`, ` .\.venv\Scripts\Activate.ps1`, then the same `pip install` and `python` commands. Use `--count 0` (the default) to publish until interrupted. Override `--host`, `--port`, `--topic-prefix`, or `--device-id` as needed; defaults target a broker published to loopback on port 1883. `MQTT_PUBLISHER_HOST`, `MQTT_PUBLISHER_PORT`, `MQTT_TOPIC_PREFIX`, and `MQTT_DEVICE_ID` may also be set in the shell environment.
 
 The local `.env` file is ignored by Git. Keep secrets out of the flow export and other tracked files.
 

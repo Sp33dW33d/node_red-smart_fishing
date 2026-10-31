@@ -1,24 +1,24 @@
 # System Architecture
 
-## Current Phase 2 data path
+## Current deployed stack (Phase 2 flow and Phase 3.1 broker)
 
 ```text
 Docker Compose
-└── Node-RED 5.0.9 (host 127.0.0.1:<PORT> → container 1880)
-    ├── Weather: Inject (startup, every 15 min)
-    │   → build Open-Meteo Forecast URL from environment
-    │   → HTTP Request (JSON) → validate and normalize
-    │   → Debug sidebar: normalized weather payload
-    └── Marine: Inject (startup, every 15 min)
-        → build Open-Meteo Marine URL from environment
-        → HTTP Request (JSON) → validate and normalize
-        → Debug sidebar: normalized marine payload
+├── Node-RED 5.0.9 (host 127.0.0.1:<PORT> → container 1880)
+│   └── Weather and marine API flows → normalized payloads/errors → Debug sidebar
+└── Mosquitto 2.1.2 (host 127.0.0.1:<MQTT_PORT> → container 1883)
+    └── persistent broker state (Docker named volume)
 
-Weather and marine Catch nodes
-    → format request/validation error → Debug sidebar
+Python telemetry simulator (host process)
+└── MQTT QoS 1 publish → <MQTT_TOPIC_PREFIX>/<device_id>/telemetry
+    └── Mosquitto (localhost:<MQTT_PORT>)
 ```
 
-There is no MQTT broker, sensor publisher, dashboard UI, database, or external state store in the current deployment. The Node-RED editor is the inspection interface. `/ui` is not expected to exist until a dashboard phase implements it.
+The Mosquitto listener is reachable to Compose services as `mosquitto:1883` and is published to the host on loopback only. Anonymous MQTT access is enabled for local assignment development. The Python publisher is implemented, but Node-RED MQTT subscriptions are not yet in the flow. There is no dashboard UI. The Node-RED editor is the inspection interface; `/ui` is not expected until a dashboard phase implements it.
+
+The Phase 3.2 host-side publisher uses `paho-mqtt==2.1.0`. By default it publishes to `smartfishing/demo-01/telemetry` every five seconds with QoS 1 and no retained message. Each JSON payload contains `device_id`, a UTC `timestamp`, `water_temperature_c`, `water_level_m`, cumulative `catch_count`, and `battery_voltage_v`. All values are synthetic. Node-RED does not subscribe to this topic until Phase 3.3.
+
+Weather and marine paths are Inject → request builder → HTTP Request → validation/normalization → Debug. Their Catch nodes format failures for Debug.
 
 ## Request and schedule behavior
 
@@ -73,4 +73,4 @@ Errors use `msg.topic = environment/<source>/error` and include `source`, `statu
 
 ## Later phases
 
-Phase 3 adds MQTT ingestion; Phase 4 adds a dashboard. Their topic/payload contracts and UI wiring should be documented when implemented. Earlier draft examples are not active interfaces.
+Phase 3.3–3.4 add Node-RED MQTT subscriptions, normalization, and live path verification; Phase 4 adds a dashboard. Earlier draft examples are not active interfaces.
