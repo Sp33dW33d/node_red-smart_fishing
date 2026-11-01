@@ -1,6 +1,6 @@
 # Technology Stack
 
-This document records the current Phase 2 API flow and seven-day history cache, Phase 3 MQTT broker/publisher/ingestion flow, and Phase 4.3 Dashboard 2 pages and live metrics. MQTT telemetry and Open-Meteo responses feed dashboard summary values, gauges, and charts.
+This document records the current Phase 2 API flow and seven-day history cache, Phase 3 MQTT broker/publisher/ingestion flow, and Phase 4 Dashboard 2 pages and live metrics. MQTT telemetry and Open-Meteo responses feed dashboard summary values, gauges, and charts.
 
 ## Implemented stack
 
@@ -24,7 +24,7 @@ MQTT In is supplied by the Node-RED core nodes. FlowFuse Dashboard is installed 
 
 | Component | Planned use | Phase |
 |---|---|---|
-| Show error, missing-value, and stale-data states | Make data quality visible in the dashboard | 4.4 |
+| Show error, missing-value, and stale-data states | Make data quality visible in the dashboard | 4.8 |
 
 Select and pin versions when planned dependencies are implemented. Draft dependency names and versions are not current requirements.
 

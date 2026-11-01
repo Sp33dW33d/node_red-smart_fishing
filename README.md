@@ -12,7 +12,7 @@ Smart Fishing is an IND4 assignment project built with Node-RED. It polls Open-M
 - API, HTTP, and validation failures are formatted into error messages and sent to the Debug sidebar.
 - Phase 3.1–3.4 provide a Mosquitto broker, Python simulator, and Node-RED MQTT ingestion flow. A live simulator message has been received and normalized.
 - The sample location is Sassoon Dock, Mumbai (`18.9110, 72.8253`). The Overview displays the configured location name and coordinates from `LOCATION_NAME`, `LOCATION_LATITUDE`, and `LOCATION_LONGITUDE`; the weather normalization node supplies these values to the dashboard. Coordinates represent a forecast grid location near the harbor, not a dockside sensor.
-- FlowFuse Dashboard `1.34.1` provides Overview, Environment, and Water Conditions pages at `/dashboard/overview`, `/dashboard/environment`, and `/dashboard/water-conditions`. Normalized weather, marine, and MQTT values feed summary tiles, gauges, and charts. Explicit missing-value, stale-data, and API-error states are pending Phase 4.4.
+- FlowFuse Dashboard `1.34.1` provides Overview, Environment, and Water Conditions pages at `/dashboard/overview`, `/dashboard/environment`, and `/dashboard/water-conditions`. Normalized weather, marine, and MQTT values feed summary tiles, gauges, and charts. Explicit missing-value, stale-data, and API-error states are pending Phase 4.8.
 
 ## Repository layout
 
@@ -77,7 +77,7 @@ No Open-Meteo API key is required for the configured forecast endpoints. Use coo
    docker compose up -d
    ```
 
-   On Windows with Docker running in WSL, double-click `start-smart-fishing.bat` to start the Compose services, wait for the dashboard, and open the Node-RED editor and Overview dashboard in your default browser.
+   On Windows with Docker running in WSL, double-click `start-smart-fishing.bat` to start the Compose services, keep the WSL Docker engine alive while the launcher is open, wait for the dashboard, and open the Node-RED editor and Overview dashboard in your default browser. Press `q` in the launcher terminal to stop the project containers and close it after the WSL keepalive exits.
 
 4. Open the Node-RED editor at `http://localhost:<PORT>` (default `http://localhost:1880`) to inspect flows and Debug output. Open the dashboard at `http://localhost:<PORT>/dashboard/overview`; use **Update frequency** to set weather/marine polling and the sensor display cadence (default 1 minute). Forecast values may remain unchanged when the underlying model has not updated. The 15-second setting makes two forecast requests every 15 seconds (11,520/day if left on continuously); use it only briefly because Open-Meteo's free limit is 10,000 calls per day. MQTT sensor gauges and trend charts also require the simulator to be running; see below.
 
@@ -136,7 +136,7 @@ The local `.env` file is ignored by Git. Keep secrets out of the flow export and
 - **Editor does not open:** Check `docker compose ps` and `docker compose logs --tail=100 node-red`. Confirm that the chosen host `PORT` is free.
 - **No normalized API messages:** Open the Debug sidebar, then inspect container logs and configured coordinates. The marine model may not return data for every location.
 - **HTTPS connection failures in WSL/Docker:** Keep `NODE_RED_FORCE_IPV4=true` when IPv6 resolves but is not routable from the container.
-- **Dashboard page does not load:** Check `docker compose logs --tail=100 node-red` and confirm the Dashboard 2 package is installed. Open `/dashboard/overview`, `/dashboard/environment`, or `/dashboard/water-conditions` under the configured host port. Weather and marine widgets wait for the API refresh, and MQTT widgets wait for simulator messages. Error, missing-value, and stale-data indicators are planned for Phase 4.4.
+- **Dashboard page does not load:** Check `docker compose logs --tail=100 node-red` and confirm the Dashboard 2 package is installed. Open `/dashboard/overview`, `/dashboard/environment`, or `/dashboard/water-conditions` under the configured host port. Weather and marine widgets wait for the API refresh, and MQTT widgets wait for simulator messages. Error, missing-value, and stale-data indicators are planned for Phase 4.8.
 
 ## Data attribution and license
 

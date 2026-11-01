@@ -31,8 +31,12 @@ This checklist tracks repository state. A task is complete only when implementat
 
 - [x] 4.1 Select and pin FlowFuse Dashboard `@flowfuse/node-red-dashboard` `1.34.1` for the selected runtime.
 - [x] 4.2 Build overview, weather, and water condition views; deploy and verify all three Dashboard 2 pages.
-- [x] 4.3 Connect normalized weather, marine, and MQTT data to dashboard gauges, charts, and summary values; verify live API and simulator values; provide a selectable dashboard refresh interval.
-- [ ] 4.4 Show API failures, missing values, and stale-data state in the UI.
+- [x] 4.3 Connect normalized weather data to the Environment and Overview dashboard widgets; verify the live weather values.
+- [x] 4.4 Connect normalized marine data to the Water Conditions and Overview dashboard widgets; verify the live marine values.
+- [x] 4.5 Connect normalized MQTT telemetry to the Water Conditions and Overview dashboard widgets; verify live simulator values.
+- [x] 4.6 Display combined weather, marine, and telemetry summary values on the Overview dashboard.
+- [x] 4.7 Add a selectable dashboard update interval (15 seconds, 30 seconds, 1 minute, 5 minutes, or 15 minutes) and apply it to API refreshes and dashboard telemetry updates.
+- [ ] 4.8 Show API failures, missing values, and stale-data state in the UI.
 
 ## Phase 5: Packaging and release checks
 

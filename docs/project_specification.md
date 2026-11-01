@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Smart Fishing is an IND4 assignment being developed in phases as a Node-RED environmental monitoring application. Phase 2 implements scheduled Open-Meteo ingestion and normalization. Phase 3.1–3.2 add the local Mosquitto configuration and Python synthetic telemetry publisher; Phase 3.3 connects the telemetry topic to Node-RED normalization. A live sample has been verified. Phase 4.2 adds Overview, Environment, and Water Conditions dashboard pages, and Phase 4.3 connects them to normalized API and MQTT data.
+Smart Fishing is an IND4 assignment being developed in phases as a Node-RED environmental monitoring application. Phase 2 implements scheduled Open-Meteo ingestion and normalization. Phase 3.1–3.2 add the local Mosquitto configuration and Python synthetic telemetry publisher; Phase 3.3 connects the telemetry topic to Node-RED normalization. A live sample has been verified. Phase 4.2 adds Overview, Environment, and Water Conditions dashboard pages. Phases 4.3–4.7 connect weather, marine, and MQTT data, provide summary values, and add a selectable update interval.
 
 ## Current implementation requirements
 
@@ -25,8 +25,12 @@ Smart Fishing is an IND4 assignment being developed in phases as a Node-RED envi
 | P3-3 | Subscribe to the telemetry topic in Node-RED and validate/normalize the payload. | Implemented and live sample verified |
 | P4-1 | Select and pin a maintained dashboard package compatible with the runtime. | Implemented: FlowFuse Dashboard 1.34.1 |
 | P4-2 | Provide overview and weather/water dashboard views. | Implemented and verified; pages deployed |
-| P4-3 | Connect normalized data to dashboard gauges, charts, and summary values. | Implemented and verified with live API data and MQTT samples |
-| P4-4 | Indicate API failures, missing values, and stale data in the UI. | Planned: Phase 4.4 |
+| P4-3 | Display normalized weather values in dashboard gauges, charts, and summaries. | Implemented and live values verified; Phase 4.3 |
+| P4-4 | Display normalized marine values in dashboard gauges and summaries. | Implemented and live values verified; Phase 4.4 |
+| P4-5 | Display normalized MQTT telemetry in dashboard gauges, trends, and summaries. | Implemented and simulator values verified; Phase 4.5 |
+| P4-6 | Combine weather, marine, and telemetry readings in Overview summary values. | Implemented and verified; Phase 4.6 |
+| P4-7 | Let users select the dashboard update interval. | Implemented and verified; Phase 4.7 |
+| P4-8 | Indicate API failures, missing values, and stale data in the UI. | Planned: Phase 4.8 |
 | P5-1 | Document and verify clean deployment of the completed implementation. | Phase 5 |
 
 ## Data and behavior
@@ -72,15 +76,18 @@ Smart Fishing is an IND4 assignment being developed in phases as a Node-RED envi
 - [x] Node-RED subscribes to the configured telemetry topic and emits normalized sensor payloads.
 - [ ] Malformed JSON/schema messages reach the MQTT error output.
 
-### Phase 4.1–4.3 (dashboard package, pages, and live data verified)
+### Phase 4.1–4.7 (dashboard package, pages, live data, and update interval verified)
 
 - [x] FlowFuse Dashboard `1.34.1` is pinned and its UI node types load in the Node-RED editor.
 - [x] Overview, Environment, and Water Conditions pages render at their configured dashboard routes.
-- [x] Normalized weather, marine, and MQTT values reach their dashboard summaries, gauges, and charts.
-- [ ] Stale-data and API-error states are shown to users (Phase 4.4).
+- [x] Normalized weather values reach their dashboard gauges, charts, and summaries (Phase 4.3).
+- [x] Normalized marine values reach their dashboard gauges and summaries (Phase 4.4).
+- [x] Normalized MQTT values reach their dashboard gauges, trends, and summaries (Phase 4.5).
+- [x] Combined summary values are shown on Overview and the update interval is selectable (Phases 4.6–4.7).
+- [ ] Stale-data and API-error states are shown to users (Phase 4.8).
 
 ### Whole project (pending later phases)
 
 - [x] Dashboard views and widgets are connected to validated signals.
-- [ ] Stale-data and API-error states are visible to dashboard users.
+- [ ] Stale-data and API-error states are visible to dashboard users (Phase 4.8).
 - [ ] Final deployment and repository hygiene are verified against the completed setup documentation.

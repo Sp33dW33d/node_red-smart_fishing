@@ -1,6 +1,6 @@
 # System Architecture
 
-## Current stack (Phase 2 API flow and history cache, Phase 3 MQTT path, Phase 4.3 live dashboard)
+## Current stack (Phase 2 API flow and history cache, Phase 3 MQTT path, Phase 4 live dashboard)
 
 ```text
 Docker Compose
@@ -18,7 +18,7 @@ Python telemetry simulator (host process)
     └── Mosquitto (localhost:<MQTT_PORT>)
 ```
 
-The Mosquitto listener is reachable to Compose services as `mosquitto:1883` and is published to the host on loopback only. Anonymous MQTT access is enabled for local assignment development. FlowFuse Dashboard 2.0 serves the Overview, Environment, and Water Conditions pages at `/dashboard/overview`, `/dashboard/environment`, and `/dashboard/water-conditions`. The Overview page has a shared update-frequency selector (15 seconds, 30 seconds, 1 minute, 5 minutes, or 15 minutes; default 1 minute). Its scheduler refreshes weather and marine requests and throttles sensor messages sent to dashboard widgets. The MQTT simulator itself remains a separate process and must be running to provide sensor data. Dashboard Link nodes bridge the source flow tab to the dashboard tab. The Environment page separates the weather header, weather gauges, and rainfall chart within the forecast display. The Water Conditions page has a separate introduction, a Marine forecast panel with three gauges, a Sensor telemetry readings panel, and a Sensor trends panel containing the water-temperature and water-level charts. Weather feeds the air-temperature and wind gauges, overview values, rainfall bar chart, and rainfall total. Marine feeds sea-temperature, sea-level, and wave-height gauges plus overview values. MQTT telemetry feeds sensor gauges, catch-count summaries, and one-hour trend charts. Missing-value, stale-data, and API-error states are planned for Phase 4.4.
+The Mosquitto listener is reachable to Compose services as `mosquitto:1883` and is published to the host on loopback only. Anonymous MQTT access is enabled for local assignment development. FlowFuse Dashboard 2.0 serves the Overview, Environment, and Water Conditions pages at `/dashboard/overview`, `/dashboard/environment`, and `/dashboard/water-conditions`. The Overview page has a shared update-frequency selector (15 seconds, 30 seconds, 1 minute, 5 minutes, or 15 minutes; default 1 minute). Its scheduler refreshes weather and marine requests and throttles sensor messages sent to dashboard widgets. The MQTT simulator itself remains a separate process and must be running to provide sensor data. Dashboard Link nodes bridge the source flow tab to the dashboard tab. The Environment page separates the weather header, weather gauges, and rainfall chart within the forecast display. The Water Conditions page has a separate introduction, a Marine forecast panel with three gauges, a Sensor telemetry readings panel, and a Sensor trends panel containing the water-temperature and water-level charts. Weather feeds the air-temperature and wind gauges, overview values, rainfall bar chart, and rainfall total. Marine feeds sea-temperature, sea-level, and wave-height gauges plus overview values. MQTT telemetry feeds sensor gauges, catch-count summaries, and one-hour trend charts. Missing-value, stale-data, and API-error states are planned for Phase 4.8.
 
 The Phase 3.2 host-side publisher uses `paho-mqtt==2.1.0`. By default it publishes to `smartfishing/demo-01/telemetry` every five seconds with QoS 1 and no retained message. Each JSON payload contains `device_id`, a UTC `timestamp`, `water_temperature_c`, `water_level_m`, cumulative `catch_count`, and `battery_voltage_v`. All values are synthetic.
 
@@ -85,4 +85,4 @@ Errors use `msg.topic = environment/<source>/error` and include `source`, `statu
 
 ## Later phases
 
-The live MQTT path was verified with simulator samples, including values displayed in the dashboard gauges and charts; malformed-payload error handling remains to be checked. The three Dashboard 2 pages and their normalized data connections are deployed and verified. Phase 4.4 will present missing, stale, and failed data states. Earlier draft examples are not active interfaces.
+The live MQTT path was verified with simulator samples, including values displayed in the dashboard gauges and charts; malformed-payload error handling remains to be checked. The three Dashboard 2 pages and their normalized data connections are deployed and verified. Phase 4.8 will present missing, stale, and failed data states. Earlier draft examples are not active interfaces.
