@@ -10,7 +10,7 @@
     "id": "a100000000000002",
     "type": "comment",
     "z": "a100000000000001",
-    "name": "Weather — Open-Meteo Forecast API (every 15 minutes)",
+    "name": "Weather — Open-Meteo Forecast API (dashboard-selected interval)",
     "info": "Requests current air temperature and wind speed plus a five-day daily rain forecast for the configured location.",
     "x": 260,
     "y": 60,
@@ -20,13 +20,13 @@
     "id": "a100000000000003",
     "type": "inject",
     "z": "a100000000000001",
-    "name": "Fetch weather (15 min)",
+    "name": "Fetch weather on startup",
     "props": [
       {
         "p": "payload"
       }
     ],
-    "repeat": "900",
+    "repeat": "",
     "crontab": "",
     "once": true,
     "onceDelay": "5",
@@ -126,7 +126,7 @@
     "id": "a100000000000008",
     "type": "comment",
     "z": "a100000000000001",
-    "name": "Marine — Open-Meteo Marine API (every 15 minutes)",
+    "name": "Marine — Open-Meteo Marine API (dashboard-selected interval)",
     "info": "Requests hourly sea-surface temperature, sea-level height (MSL, including modeled tides), and wave height for the configured location.",
     "x": 280,
     "y": 240,
@@ -136,13 +136,13 @@
     "id": "a100000000000009",
     "type": "inject",
     "z": "a100000000000001",
-    "name": "Fetch marine data (15 min)",
+    "name": "Fetch marine data on startup",
     "props": [
       {
         "p": "payload"
       }
     ],
-    "repeat": "900",
+    "repeat": "",
     "crontab": "",
     "once": true,
     "onceDelay": "8",
@@ -384,7 +384,7 @@
     "wires": [
       [
         "a100000000000016",
-        "b500000000000003"
+        "c100000000000007"
       ]
     ]
   },
@@ -626,12 +626,27 @@
     "tab": ""
   },
   {
+    "id": "b600000000000005",
+    "type": "ui-group",
+    "name": "Weather forecast introduction",
+    "page": "b400000000000007",
+    "width": 12,
+    "height": 1,
+    "order": 0.5,
+    "showTitle": false,
+    "className": "",
+    "visible": true,
+    "disabled": false,
+    "groupType": "default",
+    "tab": ""
+  },
+  {
     "id": "b400000000000009",
     "type": "ui-markdown",
     "z": "b400000000000001",
-    "group": "b400000000000008",
+    "group": "b600000000000005",
     "name": "Weather data",
-    "order": 0,
+    "order": 0.5,
     "width": 12,
     "height": 3,
     "content": "## Weather forecast\n\nCurrent air temperature and wind speed are refreshed with the forecast. The rainfall chart shows the latest five-day forecast from Open-Meteo.",
@@ -918,7 +933,7 @@
     "z": "b400000000000001",
     "name": "Air temperature gauge",
     "group": "b400000000000008",
-    "order": 0,
+    "order": 1,
     "value": "payload",
     "valueType": "msg",
     "width": 6,
@@ -984,7 +999,7 @@
     "z": "b400000000000001",
     "name": "Wind speed gauge",
     "group": "b400000000000008",
-    "order": 1,
+    "order": 2,
     "value": "payload",
     "valueType": "msg",
     "width": 6,
@@ -1042,10 +1057,10 @@
     "id": "b500000000000018",
     "type": "ui-chart",
     "z": "b400000000000001",
-    "group": "b600000000000005",
+    "group": "b400000000000008",
     "name": "Five-day rainfall chart",
     "label": "Five-day rainfall forecast",
-    "order": 0.5,
+    "order": 3,
     "chartType": "bar",
     "category": "topic",
     "categoryType": "msg",
@@ -1670,7 +1685,7 @@
       },
       {
         "color": "#3b82f6",
-        "from": 4.0,
+        "from": 4,
         "text": "",
         "textType": "label"
       }
@@ -1809,18 +1824,163 @@
     "tab": ""
   },
   {
-    "id": "b600000000000005",
+    "id": "c100000000000005",
     "type": "ui-group",
-    "name": "Five-day rainfall forecast",
-    "page": "b400000000000007",
+    "name": "Update frequency",
+    "page": "b400000000000004",
     "width": 12,
     "height": 1,
-    "order": 2,
+    "order": 0.75,
     "showTitle": true,
     "className": "",
     "visible": true,
     "disabled": false,
     "groupType": "default",
     "tab": ""
+  },
+  {
+    "id": "c100000000000001",
+    "type": "ui-dropdown",
+    "z": "b400000000000001",
+    "group": "c100000000000005",
+    "name": "Dashboard update frequency",
+    "label": "Update interval",
+    "tooltip": "Controls weather and marine forecast polling and the sensor update cadence shown on the dashboards.",
+    "order": 0.5,
+    "width": 4,
+    "height": 1,
+    "passthru": false,
+    "multiple": false,
+    "chips": false,
+    "clearable": false,
+    "options": [
+      {
+        "label": "15 seconds",
+        "value": 15,
+        "type": "num"
+      },
+      {
+        "label": "30 seconds",
+        "value": 30,
+        "type": "num"
+      },
+      {
+        "label": "1 minute",
+        "value": 60,
+        "type": "num"
+      },
+      {
+        "label": "5 minutes",
+        "value": 300,
+        "type": "num"
+      },
+      {
+        "label": "15 minutes",
+        "value": 900,
+        "type": "num"
+      }
+    ],
+    "payload": 60,
+    "payloadType": "num",
+    "topic": "topic",
+    "topicType": "msg",
+    "className": "",
+    "typeIsComboBox": true,
+    "msgTrigger": "onChange",
+    "x": 270,
+    "y": 920,
+    "wires": [
+      [
+        "c100000000000002"
+      ]
+    ]
+  },
+  {
+    "id": "c100000000000002",
+    "type": "function",
+    "z": "b400000000000001",
+    "name": "Apply dashboard update frequency",
+    "func": "const allowed = [15, 30, 60, 300, 900];\nconst seconds = Number(msg.payload);\nif (!allowed.includes(seconds)) {\n    node.warn('Ignoring unsupported dashboard update interval: ' + msg.payload);\n    return null;\n}\nconst previous = context.get('refreshTimer');\nif (previous) clearInterval(previous);\nconst intervalMs = seconds * 1000;\nconst timer = setInterval(() => node.send({ topic: 'dashboard/refresh', payload: Date.now() }), intervalMs);\ncontext.set('refreshTimer', timer);\ncontext.set('refreshIntervalSeconds', seconds);\nglobal.set('metricRefreshIntervalMs', intervalMs);\nconst label = seconds < 60 ? seconds + ' seconds' : (seconds % 60 === 0 && seconds < 3600 ? (seconds / 60) + ' minute' + (seconds === 60 ? '' : 's') : (seconds / 60) + ' minutes');\nnode.status({ fill: 'green', shape: 'dot', text: 'refresh every ' + label });\nnode.send({ topic: 'dashboard/refresh', payload: Date.now() });\nreturn null;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "const seconds = 60;\nconst intervalMs = seconds * 1000;\nconst timer = setInterval(() => node.send({ topic: 'dashboard/refresh', payload: Date.now() }), intervalMs);\ncontext.set('refreshTimer', timer);\ncontext.set('refreshIntervalSeconds', seconds);\nglobal.set('metricRefreshIntervalMs', intervalMs);\nnode.status({ fill: 'green', shape: 'dot', text: 'refresh every 1 minute' });",
+    "finalize": "const timer = context.get('refreshTimer');\nif (timer) clearInterval(timer);\ncontext.set('refreshTimer', null);",
+    "libs": [],
+    "x": 580,
+    "y": 920,
+    "wires": [
+      [
+        "c100000000000003"
+      ]
+    ]
+  },
+  {
+    "id": "c100000000000003",
+    "type": "link out",
+    "z": "b400000000000001",
+    "name": "Refresh weather and marine APIs",
+    "mode": "link",
+    "links": [
+      "c100000000000004"
+    ],
+    "x": 880,
+    "y": 920,
+    "wires": []
+  },
+  {
+    "id": "c100000000000004",
+    "type": "link in",
+    "z": "a100000000000001",
+    "name": "Dashboard-selected refresh interval",
+    "mode": null,
+    "links": [
+      "c100000000000003"
+    ],
+    "x": 180,
+    "y": 100,
+    "wires": [
+      [
+        "a100000000000004",
+        "a10000000000000a"
+      ]
+    ]
+  },
+  {
+    "id": "c100000000000006",
+    "type": "ui-markdown",
+    "z": "b400000000000001",
+    "group": "c100000000000005",
+    "name": "Refresh frequency note",
+    "order": 1,
+    "width": 8,
+    "height": 2,
+    "content": "Controls Open-Meteo forecast polling and the sensor update cadence displayed on the dashboard. The simulator must be running for sensor data. Forecast models can update less often than they are fetched. Continuous 15-second polling can exceed the free API daily request limit.",
+    "className": "",
+    "x": 610,
+    "y": 920,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "c100000000000007",
+    "type": "function",
+    "z": "a100000000000001",
+    "name": "Throttle sensor dashboard updates",
+    "func": "const intervalMs = Number(global.get('metricRefreshIntervalMs')) || 60000;\nconst now = Date.now();\nconst last = Number(context.get('lastDashboardUpdate')) || 0;\nif (now - last < intervalMs) return null;\ncontext.set('lastDashboardUpdate', now);\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 1320,
+    "y": 560,
+    "wires": [
+      [
+        "b500000000000003"
+      ]
+    ]
   }
 ]

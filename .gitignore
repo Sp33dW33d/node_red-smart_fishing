@@ -17,3 +17,7 @@ mosquitto/log/
 .venv/
 __pycache__/
 *.py[cod]
+
+# Local rolling API history cache
+cache/*.json
+cache/*.tmp

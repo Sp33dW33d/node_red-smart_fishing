@@ -1,6 +1,6 @@
 # Technology Stack
 
-This document records the current Phase 2 API flow, Phase 3 MQTT broker/publisher/ingestion flow, and Phase 4.3 Dashboard 2 pages and live metrics. MQTT telemetry and Open-Meteo responses feed dashboard summary values, gauges, and charts.
+This document records the current Phase 2 API flow and seven-day history cache, Phase 3 MQTT broker/publisher/ingestion flow, and Phase 4.3 Dashboard 2 pages and live metrics. MQTT telemetry and Open-Meteo responses feed dashboard summary values, gauges, and charts.
 
 ## Implemented stack
 
@@ -10,6 +10,7 @@ This document records the current Phase 2 API flow, Phase 3 MQTT broker/publishe
 | Runtime language | JavaScript in Function nodes | Builds API URLs and validates/normalizes response objects. Node.js is supplied by the base image. |
 | Weather data | Open-Meteo Forecast API | Current air temperature and wind speed, plus five daily rainfall values. |
 | Marine data | Open-Meteo Marine API | Hourly sea-surface temperature, sea-level height, and wave height. |
+| Historical cache worker | Python `3.13.18` standard library | Maintains seven completed UTC days of weather and marine summaries in `cache/history-7d.json`; only missing date/source data are fetched. |
 | Runtime configuration | Docker Compose and `.env` | Provides location, endpoints, timezone, credential secret, and IPv4 setting. |
 | MQTT broker | Eclipse Mosquitto `2.1.2-alpine` | Phase 3.1 broker service; persistent state uses a Docker named volume. |
 | MQTT publisher | Python 3.10+ and `paho-mqtt==2.1.0` | Phase 3.2 synthetic telemetry publisher in `scripts/simulate-mqtt.py`. |
@@ -32,5 +33,6 @@ Select and pin versions when planned dependencies are implemented. Draft depende
 - Docker Compose v2 is used; the Compose Specification does not require a legacy top-level `version` field.
 - The Node-RED editor is published to loopback only (`127.0.0.1`) using configurable host `PORT` and container port `1880`.
 - Flow, settings, and runtime data use bind mounts under `node-red/` and `flows/`.
+- Historical API summaries use a `./cache:/cache` bind mount, separate from Node-RED flow/runtime state; the generated JSON cache is ignored by Git.
 - `NODE_RED_FORCE_IPV4=true` configures Node.js HTTPS to prefer IPv4 for the verified Docker/WSL networking case.
 - Current Open-Meteo requests use HTTPS and require no project API key.

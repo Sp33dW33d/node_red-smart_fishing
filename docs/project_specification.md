@@ -14,6 +14,7 @@ Smart Fishing is an IND4 assignment being developed in phases as a Node-RED envi
 | P2-4 | Validate response structure, HTTP status, and required numeric values before emitting normalized data. | Implemented |
 | P2-5 | Emit timestamped normalized weather, marine, and error messages for inspection. | Implemented via Debug nodes |
 | P2-6 | Keep the Node-RED host port configurable and loopback-bound by default. | Implemented in Compose |
+| P2-7 | Keep a local rolling cache of the last seven completed UTC days of weather and marine summaries; fetch only missing date/source data and remove dates outside the window. | Implemented and verified in `cache/history-7d.json` |
 | P3-1 | Provide a persistent local Mosquitto broker with a loopback-bound host port. | Implemented and verified |
 | P3-2 | Provide a configurable Python publisher for synthetic MQTT telemetry. | Implemented and verified against Mosquitto |
 
@@ -36,6 +37,7 @@ Smart Fishing is an IND4 assignment being developed in phases as a Node-RED envi
 - Forecast/model values are not measurements from physical harbor sensors and may be unavailable for some coordinates.
 - Normalized payload and error contracts are documented in [system_architecture.md](system_architecture.md).
 - Requests use HTTPS. The configured Open-Meteo endpoints require no API key.
+- Historical cache values are daily summaries of recent archived model forecasts, not physical sensor measurements; the JSON cache is at `cache/history-7d.json` and is not connected to a dashboard yet.
 
 ## Non-functional requirements
 
@@ -54,6 +56,11 @@ Smart Fishing is an IND4 assignment being developed in phases as a Node-RED envi
 - [x] Both outputs pass through validation/normalization and are visible in the Debug sidebar.
 - [x] Error paths format failures for Debug inspection.
 - [x] No API secrets are needed for the configured Open-Meteo endpoints.
+
+### Phase 2.6 (cache populated and cache-hit behavior verified)
+
+- [x] Cache contains seven completed UTC dates with weather and marine summaries for the configured location.
+- [x] A second refresh reports 7/7 dates for both sources without logging a cache-miss fetch.
 
 ### Phase 3.1–3.2 (verified)
 

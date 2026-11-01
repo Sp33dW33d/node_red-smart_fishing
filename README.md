@@ -4,7 +4,9 @@ Smart Fishing is an IND4 assignment project built with Node-RED. It polls Open-M
 
 ## Current status
 
-- Two API flows run on startup and every 15 minutes.
+- Weather and marine API flows run on startup and at the interval selected on the Overview dashboard (15 seconds, 30 seconds, 1 minute, 5 minutes, or 15 minutes; default 1 minute).
+- The same selection throttles how often incoming MQTT sensor readings are sent to dashboard widgets. The Python simulator must still be running; it publishes every 5 seconds by default.
+- A separate Python service maintains a local seven-day cache of weather and marine daily summaries in `cache/history-7d.json`. It fetches only dates and sources missing from the cache and trims dates outside the seven completed UTC-day window.
 - Weather output contains air temperature, wind speed, and up to five daily rainfall forecast values.
 - Marine output contains the nearest hourly sea-surface temperature, sea-level height relative to mean sea level, and wave height values available from the response.
 - API, HTTP, and validation failures are formatted into error messages and sent to the Debug sidebar.
@@ -17,9 +19,12 @@ Smart Fishing is an IND4 assignment project built with Node-RED. It polls Open-M
 ```text
 .
 ├── README.md
+├── start-smart-fishing.bat
 ├── LICENSE
 ├── .env.example
 ├── compose.yaml
+├── cache/
+│   └── .gitkeep
 ├── flows/
 │   └── smart-fishing.json
 ├── node-red/
@@ -35,6 +40,7 @@ Smart Fishing is an IND4 assignment project built with Node-RED. It polls Open-M
 │   ├── implementation_plan.md
 │   └── chatgpt_codex_directives.md
 └── scripts/
+    ├── history-cache.py
     ├── simulate-mqtt.py
     └── requirements.txt
 ```
@@ -45,6 +51,7 @@ Node-RED's generated runtime configuration, credentials, and installed modules a
 
 - Docker Engine with the Docker Compose v2 plugin.
 - A working outbound HTTPS connection from the Node-RED container to Open-Meteo.
+- A working outbound HTTPS connection from the history-cache container to Open-Meteo; the service uses Python 3.13's standard library and no additional Python packages.
 - The Compose file pins `nodered/node-red:5.0.9`, matching the runtime used to verify the current flow.
 - The MQTT service uses the official Eclipse Mosquitto image `2.1.2-alpine`.
 - The telemetry publisher requires Python 3.10+ and the pinned `paho-mqtt` dependency in `scripts/requirements.txt`.
@@ -70,7 +77,11 @@ No Open-Meteo API key is required for the configured forecast endpoints. Use coo
    docker compose up -d
    ```
 
-4. Open the Node-RED editor at `http://localhost:<PORT>` (default `http://localhost:1880`) to inspect flows and Debug output. Open the dashboard at `http://localhost:<PORT>/dashboard/overview`; use its navigation menu to switch between Overview, Environment, and Water Conditions. Weather and marine values refresh shortly after deployment and every 15 minutes. MQTT sensor gauges and trend charts update when the simulator publishes; run the simulator as described below to populate them.
+   On Windows with Docker running in WSL, double-click `start-smart-fishing.bat` to start the Compose services, wait for the dashboard, and open the Node-RED editor and Overview dashboard in your default browser.
+
+4. Open the Node-RED editor at `http://localhost:<PORT>` (default `http://localhost:1880`) to inspect flows and Debug output. Open the dashboard at `http://localhost:<PORT>/dashboard/overview`; use **Update frequency** to set weather/marine polling and the sensor display cadence (default 1 minute). Forecast values may remain unchanged when the underlying model has not updated. The 15-second setting makes two forecast requests every 15 seconds (11,520/day if left on continuously); use it only briefly because Open-Meteo's free limit is 10,000 calls per day. MQTT sensor gauges and trend charts also require the simulator to be running; see below.
+
+The `history-cache` Compose service populates `cache/history-7d.json` when a weather or marine date is missing, then checks hourly for newly available dates. It stores seven completed UTC calendar days. Cache files are local runtime data and are ignored by Git. The history is model forecast output, not observations from physical harbor instruments; no dashboard UI uses this cache yet.
 
 5. Stop the container while retaining its runtime data:
 
@@ -93,6 +104,7 @@ The service is bound to `127.0.0.1` by default. It is intended for local develop
 | `LOCATION_LONGITUDE` | `72.8253` | Forecast longitude (Sassoon Dock sample). |
 | `WEATHER_API_URL` | Open-Meteo Forecast API | Weather endpoint. |
 | `MARINE_API_URL` | Open-Meteo Marine API | Marine endpoint. |
+| `HISTORY_CACHE_INTERVAL_SECONDS` | `3600` | How often the local cache checks for missing or newly available history dates. |
 | `MQTT_PORT` | `1883` | Host port for the local Mosquitto listener, bound to loopback. |
 | `MQTT_BROKER_HOST` | `mosquitto` | Compose service hostname for clients in the Compose network. |
 | `MQTT_BROKER_PORT` | `1883` | Mosquitto listener port for Compose-network clients. |

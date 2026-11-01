@@ -1,6 +1,6 @@
 # System Architecture
 
-## Current stack (Phase 2 API flow, Phase 3 MQTT path, Phase 4.3 live dashboard)
+## Current stack (Phase 2 API flow and history cache, Phase 3 MQTT path, Phase 4.3 live dashboard)
 
 ```text
 Docker Compose
@@ -8,6 +8,8 @@ Docker Compose
 │   ├── Weather and marine API flows → normalized values/errors → Debug and Dashboard
 │   ├── MQTT In → validate and normalize sensor telemetry/errors → Debug and Dashboard
 │   └── FlowFuse Dashboard 2 → Overview, Environment, Water Conditions pages
+├── History cache (Python 3.13 standard library)
+│   └── Open-Meteo history on cache miss → ./cache/history-7d.json (seven completed UTC days)
 └── Mosquitto 2.1.2 (host 127.0.0.1:<MQTT_PORT> → container 1883)
     └── persistent broker state (Docker named volume)
 
@@ -16,7 +18,7 @@ Python telemetry simulator (host process)
     └── Mosquitto (localhost:<MQTT_PORT>)
 ```
 
-The Mosquitto listener is reachable to Compose services as `mosquitto:1883` and is published to the host on loopback only. Anonymous MQTT access is enabled for local assignment development. FlowFuse Dashboard 2.0 serves the Overview, Environment, and Water Conditions pages at `/dashboard/overview`, `/dashboard/environment`, and `/dashboard/water-conditions`. Dashboard Link nodes bridge the source flow tab to the dashboard tab. The Environment page separates current weather gauges from the five-day rainfall chart. The Water Conditions page has a separate introduction, a Marine forecast panel with three gauges, a Sensor telemetry readings panel, and a Sensor trends panel containing the water-temperature and water-level charts. Weather feeds the air-temperature and wind gauges, overview values, rainfall bar chart, and rainfall total. Marine feeds sea-temperature, sea-level, and wave-height gauges plus overview values. MQTT telemetry feeds sensor gauges, catch-count summaries, and one-hour trend charts. Missing-value, stale-data, and API-error states are planned for Phase 4.4.
+The Mosquitto listener is reachable to Compose services as `mosquitto:1883` and is published to the host on loopback only. Anonymous MQTT access is enabled for local assignment development. FlowFuse Dashboard 2.0 serves the Overview, Environment, and Water Conditions pages at `/dashboard/overview`, `/dashboard/environment`, and `/dashboard/water-conditions`. The Overview page has a shared update-frequency selector (15 seconds, 30 seconds, 1 minute, 5 minutes, or 15 minutes; default 1 minute). Its scheduler refreshes weather and marine requests and throttles sensor messages sent to dashboard widgets. The MQTT simulator itself remains a separate process and must be running to provide sensor data. Dashboard Link nodes bridge the source flow tab to the dashboard tab. The Environment page separates the weather header, weather gauges, and rainfall chart within the forecast display. The Water Conditions page has a separate introduction, a Marine forecast panel with three gauges, a Sensor telemetry readings panel, and a Sensor trends panel containing the water-temperature and water-level charts. Weather feeds the air-temperature and wind gauges, overview values, rainfall bar chart, and rainfall total. Marine feeds sea-temperature, sea-level, and wave-height gauges plus overview values. MQTT telemetry feeds sensor gauges, catch-count summaries, and one-hour trend charts. Missing-value, stale-data, and API-error states are planned for Phase 4.4.
 
 The Phase 3.2 host-side publisher uses `paho-mqtt==2.1.0`. By default it publishes to `smartfishing/demo-01/telemetry` every five seconds with QoS 1 and no retained message. Each JSON payload contains `device_id`, a UTC `timestamp`, `water_temperature_c`, `water_level_m`, cumulative `catch_count`, and `battery_voltage_v`. All values are synthetic.
 
@@ -24,9 +26,15 @@ The Node-RED MQTT In node subscribes at QoS 1 to `${MQTT_TOPIC_PREFIX}/+/telemet
 
 Weather and marine paths are Inject → request builder → HTTP Request → validation/normalization → Debug. Their Catch nodes format failures for Debug.
 
+## Rolling API history cache
+
+The Compose `history-cache` service stores daily Open-Meteo Forecast API and Marine API summaries in `cache/history-7d.json`. It maintains the seven completed UTC calendar days in ascending date order. At each hourly check it removes expired dates, requests only a missing date/source range, merges successful results, and leaves cached weather or marine data intact if the other API is unavailable. A location or schema change invalidates the previous cache. Cached weather and marine values are summaries of archived model forecasts, not measured harbor observations. The cache is prepared for future dashboard use and is not wired to UI widgets.
+
+Weather records contain daily mean/min/max air temperature, maximum wind speed, rain, and precipitation. Marine records aggregate hourly sea-surface temperature, mean-sea-level height, and wave height into per-day mean/min/max/sample counts. UTC is used consistently for the cache keys.
+
 ## Request and schedule behavior
 
-- Both Inject nodes run shortly after deployment and every 900 seconds.
+- Both Inject nodes run shortly after deployment. The Overview scheduler then refreshes both APIs at the selected dashboard interval (default 60 seconds) and triggers an immediate fetch whenever the selection changes.
 - Weather requests specify configured latitude/longitude, current `temperature_2m` and `wind_speed_10m`, daily `rain_sum`, five forecast days, automatic timezone, Celsius, and km/h.
 - Marine requests specify configured latitude/longitude and hourly `sea_surface_temperature`, `sea_level_height_msl`, and `wave_height` for two forecast days.
 - Endpoints, location name, and coordinates come from environment variables passed by `compose.yaml`. The normalized weather location object feeds the Overview introduction, so the displayed name and coordinates follow `LOCATION_NAME`, `LOCATION_LATITUDE`, and `LOCATION_LONGITUDE`; the linked weather-normalization flow is the backend source.

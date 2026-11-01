@@ -15,6 +15,7 @@ This checklist tracks repository state. A task is complete only when implementat
 - [x] 2.3 Validate response structures and normalize data in Function nodes.
 - [x] 2.4 Format request and validation failures for inspection.
 - [x] 2.5 Verify live normalized outputs for the Sassoon Dock sample coordinates.
+- [x] 2.6 Build a local rolling seven-day weather and marine history cache; request only missing date/source data and prune expired dates; verify the populated local cache.
 
 ## Phase 3: MQTT sensor integration
 
@@ -30,7 +31,7 @@ This checklist tracks repository state. A task is complete only when implementat
 
 - [x] 4.1 Select and pin FlowFuse Dashboard `@flowfuse/node-red-dashboard` `1.34.1` for the selected runtime.
 - [x] 4.2 Build overview, weather, and water condition views; deploy and verify all three Dashboard 2 pages.
-- [x] 4.3 Connect normalized weather, marine, and MQTT data to dashboard gauges, charts, and summary values; verify live API and simulator values.
+- [x] 4.3 Connect normalized weather, marine, and MQTT data to dashboard gauges, charts, and summary values; verify live API and simulator values; provide a selectable dashboard refresh interval.
 - [ ] 4.4 Show API failures, missing values, and stale-data state in the UI.
 
 ## Phase 5: Packaging and release checks

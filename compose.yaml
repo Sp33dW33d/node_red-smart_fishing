@@ -24,6 +24,22 @@ services:
       - ./node-red:/data
       - ./flows:/data/flows
 
+  history-cache:
+    image: python:3.13.18-slim-bookworm
+    restart: unless-stopped
+    environment:
+      TZ: UTC
+      LOCATION_NAME: ${LOCATION_NAME:-Sassoon Dock, Mumbai}
+      LOCATION_LATITUDE: ${LOCATION_LATITUDE:-18.9110}
+      LOCATION_LONGITUDE: ${LOCATION_LONGITUDE:-72.8253}
+      WEATHER_API_URL: ${WEATHER_API_URL:-https://api.open-meteo.com/v1/forecast}
+      MARINE_API_URL: ${MARINE_API_URL:-https://marine-api.open-meteo.com/v1/marine}
+      HISTORY_CACHE_INTERVAL_SECONDS: ${HISTORY_CACHE_INTERVAL_SECONDS:-3600}
+    command: ["python", "/app/history-cache.py"]
+    volumes:
+      - ./scripts/history-cache.py:/app/history-cache.py:ro
+      - ./cache:/cache
+
   mosquitto:
     image: eclipse-mosquitto:2.1.2-alpine
     restart: unless-stopped
