@@ -310,5 +310,134 @@
     "x": 1000,
     "y": 400,
     "wires": []
+  },
+  {
+    "id": "a100000000000012",
+    "type": "comment",
+    "z": "a100000000000001",
+    "name": "MQTT — simulator telemetry (QoS 1)",
+    "info": "Subscribes to the configured topic filter, validates the simulator payload, and emits a normalized sensor message.",
+    "x": 300,
+    "y": 500,
+    "wires": []
+  },
+  {
+    "id": "a100000000000013",
+    "type": "mqtt-broker",
+    "name": "Local Mosquitto",
+    "broker": "${MQTT_BROKER_HOST}",
+    "port": "${MQTT_BROKER_PORT}",
+    "clientid": "",
+    "autoConnect": true,
+    "usetls": false,
+    "protocolVersion": "4",
+    "keepalive": "60",
+    "cleansession": true,
+    "autoUnsubscribe": true,
+    "birthTopic": "",
+    "birthQos": "0",
+    "birthPayload": "",
+    "closeTopic": "",
+    "closeQos": "0",
+    "closePayload": "",
+    "willTopic": "",
+    "willQos": "0",
+    "willPayload": ""
+  },
+  {
+    "id": "a100000000000014",
+    "type": "mqtt in",
+    "z": "a100000000000001",
+    "name": "Simulator telemetry",
+    "topic": "${MQTT_TELEMETRY_TOPIC}",
+    "qos": "1",
+    "datatype": "json",
+    "broker": "a100000000000013",
+    "nl": false,
+    "rap": true,
+    "rh": 0,
+    "inputs": 0,
+    "x": 210,
+    "y": 560,
+    "wires": [
+      [
+        "a100000000000015"
+      ]
+    ]
+  },
+  {
+    "id": "a100000000000015",
+    "type": "function",
+    "z": "a100000000000001",
+    "name": "Validate and normalize telemetry",
+    "func": "msg.source = 'mqtt';\nconst data = msg.payload;\nif (!data || typeof data !== 'object' || Array.isArray(data)) {\n    node.error('MQTT telemetry payload must be a JSON object', msg);\n    return null;\n}\nconst deviceId = typeof data.device_id === 'string' ? data.device_id.trim() : '';\nconst timestamp = typeof data.timestamp === 'string' ? Date.parse(data.timestamp) : NaN;\nconst finiteNumber = (value) => typeof value === 'number' && Number.isFinite(value);\nif (!deviceId || !Number.isFinite(timestamp)) {\n    node.error('MQTT telemetry requires a device_id and valid ISO timestamp', msg);\n    return null;\n}\nif (!finiteNumber(data.water_temperature_c) || !finiteNumber(data.water_level_m) || !finiteNumber(data.battery_voltage_v) || !Number.isInteger(data.catch_count) || data.catch_count < 0) {\n    node.error('MQTT telemetry contains missing or invalid sensor values', msg);\n    return null;\n}\nmsg.topic = 'sensor/telemetry/' + deviceId;\nmsg.payload = {\n    source: 'MQTT sensor telemetry',\n    status: 'OK',\n    deviceId: deviceId,\n    observedAt: new Date(timestamp).toISOString(),\n    receivedAt: new Date().toISOString(),\n    waterTemperatureC: data.water_temperature_c,\n    waterLevelM: data.water_level_m,\n    catchCount: data.catch_count,\n    batteryVoltageV: data.battery_voltage_v\n};\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 520,
+    "y": 560,
+    "wires": [
+      [
+        "a100000000000016"
+      ]
+    ]
+  },
+  {
+    "id": "a100000000000016",
+    "type": "debug",
+    "z": "a100000000000001",
+    "name": "Normalized MQTT telemetry",
+    "active": true,
+    "tosidebar": true,
+    "console": false,
+    "tostatus": false,
+    "complete": "payload",
+    "targetType": "msg",
+    "statusVal": "",
+    "statusType": "auto",
+    "x": 850,
+    "y": 560,
+    "wires": []
+  },
+  {
+    "id": "a100000000000017",
+    "type": "catch",
+    "z": "a100000000000001",
+    "name": "MQTT JSON and validation errors",
+    "scope": [
+      "a100000000000014",
+      "a100000000000015"
+    ],
+    "uncaught": false,
+    "x": 490,
+    "y": 640,
+    "wires": [
+      [
+        "a100000000000018"
+      ]
+    ]
+  },
+  {
+    "id": "a100000000000018",
+    "type": "function",
+    "z": "a100000000000001",
+    "name": "Tag MQTT ingestion error",
+    "func": "msg.source = 'mqtt';\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 760,
+    "y": 640,
+    "wires": [
+      [
+        "a100000000000010"
+      ]
+    ]
   }
 ]

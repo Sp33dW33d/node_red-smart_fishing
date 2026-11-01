@@ -1,6 +1,6 @@
 # Technology Stack
 
-This document records the current Phase 2 API flow and the Phase 3.1–3.2 MQTT broker/publisher setup. Runtime MQTT publishing and Node-RED subscription verification are pending.
+This document records the current Phase 2 API flow and the Phase 3.1–3.3 MQTT broker, publisher, and ingestion flow. A live simulator message was received and normalized by Node-RED.
 
 ## Implemented stack
 
@@ -15,13 +15,12 @@ This document records the current Phase 2 API flow and the Phase 3.1–3.2 MQTT 
 | MQTT publisher | Python 3.10+ and `paho-mqtt==2.1.0` | Phase 3.2 synthetic telemetry publisher in `scripts/simulate-mqtt.py`. |
 | Node types | Node-RED built-ins | Inject, Function, HTTP Request, Catch, and Debug. |
 
-`node-red/package.json` has no additional npm node dependencies. The broker and publisher are configured, but the current Node-RED flow has no MQTT nodes yet. Dashboard nodes and third-party chart widgets are also absent.
+`node-red/package.json` has no additional npm node dependencies. MQTT In is supplied by the Node-RED core nodes. Dashboard nodes and third-party chart widgets are absent.
 
 ## Planned stack (not implemented yet)
 
 | Component | Planned use | Phase |
 |---|---|---|
-| Node-RED MQTT nodes and broker integration flow | Consume sensor telemetry in the flow | 3.3 |
 | Node-RED dashboard UI nodes | Overview, weather, and water condition screens | 4 |
 
 Select and pin versions when planned dependencies are implemented. Draft dependency names and versions are not current requirements.

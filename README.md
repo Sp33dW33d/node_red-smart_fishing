@@ -8,7 +8,7 @@ Smart Fishing is an IND4 assignment project built with Node-RED. The current imp
 - Weather output contains air temperature, wind speed, and up to five daily rainfall forecast values.
 - Marine output contains the nearest hourly sea-surface temperature, sea-level height relative to mean sea level, and wave height values available from the response.
 - API, HTTP, and validation failures are formatted into error messages and sent to the Debug sidebar.
-- Phase 3.1 adds a Mosquitto MQTT broker service with persistent broker state. Phase 3.2 adds a Python simulator; Node-RED MQTT flow nodes are not implemented yet.
+- Phase 3.1–3.4 provide a Mosquitto broker, Python simulator, and Node-RED MQTT ingestion flow. A live simulator message has been received and normalized.
 - The sample coordinates are Sassoon Dock, Colaba, Mumbai (`18.9110, 72.8253`). They are configurable and represent a forecast grid location near the harbor, not a dockside sensor.
 - MQTT ingestion and a user-facing dashboard are planned phases and are not implemented yet. The `/ui` path is not available in the current flow.
 

@@ -1,11 +1,12 @@
 # System Architecture
 
-## Current deployed stack (Phase 2 flow and Phase 3.1 broker)
+## Current deployed stack (Phase 2 flow and Phase 3.1–3.3 MQTT path)
 
 ```text
 Docker Compose
 ├── Node-RED 5.0.9 (host 127.0.0.1:<PORT> → container 1880)
-│   └── Weather and marine API flows → normalized payloads/errors → Debug sidebar
+│   ├── Weather and marine API flows → normalized payloads/errors → Debug sidebar
+│   └── MQTT In → validate and normalize sensor telemetry/errors → Debug sidebar
 └── Mosquitto 2.1.2 (host 127.0.0.1:<MQTT_PORT> → container 1883)
     └── persistent broker state (Docker named volume)
 
@@ -14,9 +15,11 @@ Python telemetry simulator (host process)
     └── Mosquitto (localhost:<MQTT_PORT>)
 ```
 
-The Mosquitto listener is reachable to Compose services as `mosquitto:1883` and is published to the host on loopback only. Anonymous MQTT access is enabled for local assignment development. The Python publisher is implemented, but Node-RED MQTT subscriptions are not yet in the flow. There is no dashboard UI. The Node-RED editor is the inspection interface; `/ui` is not expected until a dashboard phase implements it.
+The Mosquitto listener is reachable to Compose services as `mosquitto:1883` and is published to the host on loopback only. Anonymous MQTT access is enabled for local assignment development. There is no dashboard UI. The Node-RED editor is the inspection interface; `/ui` is not expected until a dashboard phase implements it.
 
-The Phase 3.2 host-side publisher uses `paho-mqtt==2.1.0`. By default it publishes to `smartfishing/demo-01/telemetry` every five seconds with QoS 1 and no retained message. Each JSON payload contains `device_id`, a UTC `timestamp`, `water_temperature_c`, `water_level_m`, cumulative `catch_count`, and `battery_voltage_v`. All values are synthetic. Node-RED does not subscribe to this topic until Phase 3.3.
+The Phase 3.2 host-side publisher uses `paho-mqtt==2.1.0`. By default it publishes to `smartfishing/demo-01/telemetry` every five seconds with QoS 1 and no retained message. Each JSON payload contains `device_id`, a UTC `timestamp`, `water_temperature_c`, `water_level_m`, cumulative `catch_count`, and `battery_voltage_v`. All values are synthetic.
+
+The Node-RED MQTT In node subscribes at QoS 1 to `${MQTT_TOPIC_PREFIX}/+/telemetry` and parses JSON. Its Function node requires a non-empty device ID, parseable timestamp, finite numeric measurements, and a non-negative integer catch count. Valid messages use `msg.topic = sensor/telemetry/<device_id>` and a normalized payload with `source`, `status`, `deviceId`, `observedAt`, `receivedAt`, `waterTemperatureC`, `waterLevelM`, `catchCount`, and `batteryVoltageV`. MQTT JSON parse/validation errors are tagged `source: mqtt` and routed to the shared ingestion error output.
 
 Weather and marine paths are Inject → request builder → HTTP Request → validation/normalization → Debug. Their Catch nodes format failures for Debug.
 
@@ -73,4 +76,4 @@ Errors use `msg.topic = environment/<source>/error` and include `source`, `statu
 
 ## Later phases
 
-Phase 3.3–3.4 add Node-RED MQTT subscriptions, normalization, and live path verification; Phase 4 adds a dashboard. Earlier draft examples are not active interfaces.
+The live MQTT path was verified with a simulator message; malformed-payload error handling remains to be checked. Phase 4 adds a dashboard. Earlier draft examples are not active interfaces.
