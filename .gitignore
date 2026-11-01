@@ -6,6 +6,7 @@ node-red/.config.*
 node-red/flows_cred.json
 node-red/lib/
 node-red/node_modules/
+node-red/.npm/
 node-red/.sessions.json
 
 # Mosquitto runtime data is stored in a Docker named volume; keep any local overrides out of Git

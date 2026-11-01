@@ -1,6 +1,6 @@
 # Smart Fishing
 
-Smart Fishing is an IND4 assignment project built with Node-RED. The current implementation is the Phase 2 environmental ingestion pipeline: it polls Open-Meteo weather and marine forecast APIs, validates and normalizes each response, and sends the results to Node-RED's Debug sidebar.
+Smart Fishing is an IND4 assignment project built with Node-RED. It polls Open-Meteo weather and marine forecast APIs and ingests simulated MQTT sensor messages, validating and normalizing the data for downstream use. Phase 4 adds a FlowFuse Dashboard interface. The Overview, Environment, and Water Conditions pages are built; live metrics are the next implementation step.
 
 ## Current status
 
@@ -10,7 +10,7 @@ Smart Fishing is an IND4 assignment project built with Node-RED. The current imp
 - API, HTTP, and validation failures are formatted into error messages and sent to the Debug sidebar.
 - Phase 3.1–3.4 provide a Mosquitto broker, Python simulator, and Node-RED MQTT ingestion flow. A live simulator message has been received and normalized.
 - The sample coordinates are Sassoon Dock, Colaba, Mumbai (`18.9110, 72.8253`). They are configurable and represent a forecast grid location near the harbor, not a dockside sensor.
-- MQTT ingestion and a user-facing dashboard are planned phases and are not implemented yet. The `/ui` path is not available in the current flow.
+- FlowFuse Dashboard `1.34.1` provides Overview, Environment, and Water Conditions pages at `/dashboard/overview`, `/dashboard/environment`, and `/dashboard/water-conditions`. The pages currently describe their intended data; live values and status indicators are pending Phase 4.3–4.4.
 
 ## Repository layout
 
@@ -48,6 +48,7 @@ Node-RED's generated runtime configuration, credentials, and installed modules a
 - The Compose file pins `nodered/node-red:5.0.9`, matching the runtime used to verify the current flow.
 - The MQTT service uses the official Eclipse Mosquitto image `2.1.2-alpine`.
 - The telemetry publisher requires Python 3.10+ and the pinned `paho-mqtt` dependency in `scripts/requirements.txt`.
+- FlowFuse Dashboard `1.34.1` is pinned in `node-red/package.json`; it supports Node-RED `3.0+`, including this project’s `5.0.9` runtime.
 
 No Open-Meteo API key is required for the configured forecast endpoints. Use coordinates appropriate to your forecast area; marine forecasts are model data and may not be available at every coordinate.
 
@@ -69,7 +70,7 @@ No Open-Meteo API key is required for the configured forecast endpoints. Use coo
    docker compose up -d
    ```
 
-4. Open `http://localhost:<PORT>` (default `http://localhost:1880`). Open the **Environment Ingestion** tab and select the Debug sidebar to inspect normalized weather, marine, or error payloads. Both API flows trigger shortly after startup and repeat every 15 minutes.
+4. Open the Node-RED editor at `http://localhost:<PORT>` (default `http://localhost:1880`) to inspect flows and Debug output. Open the dashboard at `http://localhost:<PORT>/dashboard/overview`; use its navigation menu to switch between Overview, Environment, and Water Conditions. Live metric widgets will be connected in Phase 4.3. Both API flows trigger shortly after startup and repeat every 15 minutes.
 
 5. Stop the container while retaining its runtime data:
 
@@ -122,7 +123,7 @@ The local `.env` file is ignored by Git. Keep secrets out of the flow export and
 - **Editor does not open:** Check `docker compose ps` and `docker compose logs --tail=100 node-red`. Confirm that the chosen host `PORT` is free.
 - **No normalized API messages:** Open the Debug sidebar, then inspect container logs and configured coordinates. The marine model may not return data for every location.
 - **HTTPS connection failures in WSL/Docker:** Keep `NODE_RED_FORCE_IPV4=true` when IPv6 resolves but is not routable from the container.
-- **A dashboard at `/ui` is missing:** This is expected until the dashboard phase adds dashboard nodes and an implemented UI flow.
+- **Dashboard page does not load:** Check `docker compose logs --tail=100 node-red` and confirm the Dashboard 2 package is installed. Open `/dashboard/overview`, `/dashboard/environment`, or `/dashboard/water-conditions` under the configured host port. The current pages are structure and intro text; live widgets are added in Phase 4.3–4.4.
 
 ## Data attribution and license
 

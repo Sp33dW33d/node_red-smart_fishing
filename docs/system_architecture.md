@@ -1,12 +1,13 @@
 # System Architecture
 
-## Current deployed stack (Phase 2 flow and Phase 3.1–3.3 MQTT path)
+## Current stack (Phase 2 API flow, Phase 3 MQTT path, Phase 4.2 dashboard views)
 
 ```text
 Docker Compose
 ├── Node-RED 5.0.9 (host 127.0.0.1:<PORT> → container 1880)
 │   ├── Weather and marine API flows → normalized payloads/errors → Debug sidebar
-│   └── MQTT In → validate and normalize sensor telemetry/errors → Debug sidebar
+│   ├── MQTT In → validate and normalize sensor telemetry/errors → Debug sidebar
+│   └── FlowFuse Dashboard 2 → Overview, Environment, Water Conditions pages
 └── Mosquitto 2.1.2 (host 127.0.0.1:<MQTT_PORT> → container 1883)
     └── persistent broker state (Docker named volume)
 
@@ -15,7 +16,7 @@ Python telemetry simulator (host process)
     └── Mosquitto (localhost:<MQTT_PORT>)
 ```
 
-The Mosquitto listener is reachable to Compose services as `mosquitto:1883` and is published to the host on loopback only. Anonymous MQTT access is enabled for local assignment development. There is no dashboard UI. The Node-RED editor is the inspection interface; `/ui` is not expected until a dashboard phase implements it.
+The Mosquitto listener is reachable to Compose services as `mosquitto:1883` and is published to the host on loopback only. Anonymous MQTT access is enabled for local assignment development. FlowFuse Dashboard 2.0 serves the Overview, Environment, and Water Conditions pages at `/dashboard/overview`, `/dashboard/environment`, and `/dashboard/water-conditions`. Each page currently has a descriptive Markdown widget. Live metrics and failure/stale states are not connected yet; those are planned for Phases 4.3 and 4.4.
 
 The Phase 3.2 host-side publisher uses `paho-mqtt==2.1.0`. By default it publishes to `smartfishing/demo-01/telemetry` every five seconds with QoS 1 and no retained message. Each JSON payload contains `device_id`, a UTC `timestamp`, `water_temperature_c`, `water_level_m`, cumulative `catch_count`, and `battery_voltage_v`. All values are synthetic.
 
@@ -72,8 +73,8 @@ Marine uses `msg.topic = environment/marine` and a payload shaped as:
 
 The numeric values are examples from a verified run, not constants. For each marine variable, the flow selects the hourly value whose timestamp is nearest to normalization time. Marine status is `OK` when temperature and sea level are present, `PARTIAL` when at least one measurement exists but one of those two is missing. Missing measurements are `null`.
 
-Errors use `msg.topic = environment/<source>/error` and include `source`, `status: ERROR`, `error`, and `failedAt`. `<source>` is `weather` or `marine` after request construction, and `environmental-api` if configuration fails before the source is set. Non-success HTTP responses, API error objects, missing required structures, invalid numeric values, and invalid location configuration are sent through the Catch/error path. Errors are visible in Debug; there is no dashboard or persistent error history yet.
+Errors use `msg.topic = environment/<source>/error` and include `source`, `status: ERROR`, `error`, and `failedAt`. `<source>` is `weather` or `marine` after request construction, and `environmental-api` if configuration fails before the source is set. Non-success HTTP responses, API error objects, missing required structures, invalid numeric values, and invalid location configuration are sent through the Catch/error path. Errors are visible in Debug; dashboard error states and persistent history are not implemented yet.
 
 ## Later phases
 
-The live MQTT path was verified with a simulator message; malformed-payload error handling remains to be checked. Phase 4 adds a dashboard. Earlier draft examples are not active interfaces.
+The live MQTT path was verified with a simulator message; malformed-payload error handling remains to be checked. The three Dashboard 2 pages are deployed and verified. Phase 4.3 will connect them to normalized outputs, and Phase 4.4 will present missing, stale, and failed data states. Earlier draft examples are not active interfaces.

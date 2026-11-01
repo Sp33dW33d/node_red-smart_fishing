@@ -439,5 +439,258 @@
         "a100000000000010"
       ]
     ]
+  },
+  {
+    "id": "b400000000000001",
+    "type": "tab",
+    "label": "Dashboard Interface",
+    "disabled": false,
+    "info": "FlowFuse Dashboard 2 pages and introductory widgets. Phase 4.3 will connect normalized weather, marine, and MQTT values."
+  },
+  {
+    "id": "b400000000000002",
+    "type": "ui-base",
+    "name": "Smart Fishing Dashboard",
+    "path": "/dashboard",
+    "appIcon": "",
+    "includeClientData": true,
+    "acceptsClientConfig": [
+      "ui-notification",
+      "ui-control"
+    ],
+    "showPathInSidebar": false,
+    "headerContent": "page",
+    "navigationStyle": "default",
+    "titleBarStyle": "default",
+    "showReconnectNotification": true,
+    "notificationDisplayTime": 3,
+    "showDisconnectNotification": true,
+    "allowInstall": false
+  },
+  {
+    "id": "b400000000000003",
+    "type": "ui-theme",
+    "name": "Smart Fishing Theme",
+    "colors": {
+      "surface": "#ffffff",
+      "primary": "#087e8b",
+      "bgPage": "#f3f7f8",
+      "groupBg": "#ffffff",
+      "groupOutline": "#d8e3e6"
+    },
+    "sizes": {
+      "density": "default",
+      "pagePadding": "16px",
+      "groupGap": "16px",
+      "groupBorderRadius": "8px",
+      "widgetGap": "12px"
+    }
+  },
+  {
+    "id": "b400000000000004",
+    "type": "ui-page",
+    "name": "Overview",
+    "ui": "b400000000000002",
+    "path": "/overview",
+    "icon": "view-dashboard",
+    "layout": "grid",
+    "theme": "b400000000000003",
+    "breakpoints": [
+      {
+        "name": "Default",
+        "px": 0,
+        "cols": 3
+      },
+      {
+        "name": "Tablet",
+        "px": 576,
+        "cols": 6
+      },
+      {
+        "name": "Small Desktop",
+        "px": 768,
+        "cols": 9
+      },
+      {
+        "name": "Desktop",
+        "px": 1024,
+        "cols": 12
+      }
+    ],
+    "tabs": [],
+    "order": 0,
+    "className": "",
+    "visible": "true",
+    "disabled": "false"
+  },
+  {
+    "id": "b400000000000005",
+    "type": "ui-group",
+    "name": "Dashboard summary",
+    "page": "b400000000000004",
+    "width": 12,
+    "height": 1,
+    "order": 0,
+    "showTitle": true,
+    "className": "",
+    "visible": true,
+    "disabled": false,
+    "groupType": "default",
+    "tab": ""
+  },
+  {
+    "id": "b400000000000006",
+    "type": "ui-markdown",
+    "z": "b400000000000001",
+    "group": "b400000000000005",
+    "name": "Getting started",
+    "order": 0,
+    "width": 12,
+    "height": 3,
+    "content": "## Smart Fishing Monitor\n\nThis dashboard brings together forecast conditions for **Sassoon Dock, Mumbai** and telemetry from the local MQTT sensor simulator. The live summary values and status indicators will be connected in the next implementation step.",
+    "className": "",
+    "x": 300,
+    "y": 100,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "b400000000000007",
+    "type": "ui-page",
+    "name": "Environment",
+    "ui": "b400000000000002",
+    "path": "/environment",
+    "icon": "weather-partly-cloudy",
+    "layout": "grid",
+    "theme": "b400000000000003",
+    "breakpoints": [
+      {
+        "name": "Default",
+        "px": 0,
+        "cols": 3
+      },
+      {
+        "name": "Tablet",
+        "px": 576,
+        "cols": 6
+      },
+      {
+        "name": "Small Desktop",
+        "px": 768,
+        "cols": 9
+      },
+      {
+        "name": "Desktop",
+        "px": 1024,
+        "cols": 12
+      }
+    ],
+    "tabs": [],
+    "order": 1,
+    "className": "",
+    "visible": "true",
+    "disabled": "false"
+  },
+  {
+    "id": "b400000000000008",
+    "type": "ui-group",
+    "name": "Environment conditions",
+    "page": "b400000000000007",
+    "width": 12,
+    "height": 1,
+    "order": 0,
+    "showTitle": true,
+    "className": "",
+    "visible": true,
+    "disabled": false,
+    "groupType": "default",
+    "tab": ""
+  },
+  {
+    "id": "b400000000000009",
+    "type": "ui-markdown",
+    "z": "b400000000000001",
+    "group": "b400000000000008",
+    "name": "Weather data",
+    "order": 0,
+    "width": 12,
+    "height": 3,
+    "content": "## Weather forecast\n\nThis view is for current air temperature, wind speed, and the five-day rainfall forecast from the Open-Meteo Forecast API at the configured location. Live values will be connected in Phase 4.3.",
+    "className": "",
+    "x": 300,
+    "y": 200,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "b40000000000000a",
+    "type": "ui-page",
+    "name": "Water Conditions",
+    "ui": "b400000000000002",
+    "path": "/water-conditions",
+    "icon": "waves",
+    "layout": "grid",
+    "theme": "b400000000000003",
+    "breakpoints": [
+      {
+        "name": "Default",
+        "px": 0,
+        "cols": 3
+      },
+      {
+        "name": "Tablet",
+        "px": 576,
+        "cols": 6
+      },
+      {
+        "name": "Small Desktop",
+        "px": 768,
+        "cols": 9
+      },
+      {
+        "name": "Desktop",
+        "px": 1024,
+        "cols": 12
+      }
+    ],
+    "tabs": [],
+    "order": 2,
+    "className": "",
+    "visible": "true",
+    "disabled": "false"
+  },
+  {
+    "id": "b40000000000000b",
+    "type": "ui-group",
+    "name": "Water conditions",
+    "page": "b40000000000000a",
+    "width": 12,
+    "height": 1,
+    "order": 0,
+    "showTitle": true,
+    "className": "",
+    "visible": true,
+    "disabled": false,
+    "groupType": "default",
+    "tab": ""
+  },
+  {
+    "id": "b40000000000000c",
+    "type": "ui-markdown",
+    "z": "b400000000000001",
+    "group": "b40000000000000b",
+    "name": "Marine and sensor data",
+    "order": 0,
+    "width": 12,
+    "height": 3,
+    "content": "## Water conditions\n\nThis view brings together marine forecast conditions and simulated MQTT sensor telemetry, including water temperature, water level, catch count, and device battery. Live values will be connected in Phase 4.3.",
+    "className": "",
+    "x": 300,
+    "y": 300,
+    "wires": [
+      []
+    ]
   }
 ]
