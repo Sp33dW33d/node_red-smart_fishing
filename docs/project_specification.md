@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Smart Fishing is an IND4 assignment being developed in phases as a Node-RED environmental monitoring application. Phase 2 implements scheduled Open-Meteo ingestion and normalization. Phase 3.1–3.2 add the local Mosquitto configuration and Python synthetic telemetry publisher; Phase 3.3 connects the telemetry topic to Node-RED normalization. A live sample has been verified. Phase 4.2 adds user-facing Overview, Environment, and Water Conditions dashboard pages; wiring live values is the next step.
+Smart Fishing is an IND4 assignment being developed in phases as a Node-RED environmental monitoring application. Phase 2 implements scheduled Open-Meteo ingestion and normalization. Phase 3.1–3.2 add the local Mosquitto configuration and Python synthetic telemetry publisher; Phase 3.3 connects the telemetry topic to Node-RED normalization. A live sample has been verified. Phase 4.2 adds Overview, Environment, and Water Conditions dashboard pages, and Phase 4.3 connects them to normalized API and MQTT data.
 
 ## Current implementation requirements
 
@@ -23,14 +23,14 @@ Smart Fishing is an IND4 assignment being developed in phases as a Node-RED envi
 |---|---|---|
 | P3-3 | Subscribe to the telemetry topic in Node-RED and validate/normalize the payload. | Implemented and live sample verified |
 | P4-1 | Select and pin a maintained dashboard package compatible with the runtime. | Implemented: FlowFuse Dashboard 1.34.1 |
-| P4-2 | Provide overview and weather/water dashboard views. | Implemented; pages deployed and verified, live values pending P4-3 |
-| P4-3 | Connect normalized data to dashboard gauges, charts, and summary values. | Planned: Phase 4.3 |
+| P4-2 | Provide overview and weather/water dashboard views. | Implemented and verified; pages deployed |
+| P4-3 | Connect normalized data to dashboard gauges, charts, and summary values. | Implemented and verified with live API data and MQTT samples |
 | P4-4 | Indicate API failures, missing values, and stale data in the UI. | Planned: Phase 4.4 |
 | P5-1 | Document and verify clean deployment of the completed implementation. | Phase 5 |
 
 ## Data and behavior
 
-- The sample location is Sassoon Dock, Colaba, Mumbai (`18.9110, 72.8253`). Set coordinates for the intended forecast area.
+- The sample location is Sassoon Dock, Mumbai (`18.9110, 72.8253`). Set `LOCATION_NAME`, `LOCATION_LATITUDE`, and `LOCATION_LONGITUDE` together for the intended forecast area.
 - Weather data includes current air temperature and wind speed plus up to five daily rainfall forecast values.
 - Marine data includes hourly sea-surface temperature, sea-level height relative to mean sea level, and wave height for the requested model location.
 - Forecast/model values are not measurements from physical harbor sensors and may be unavailable for some coordinates.
@@ -65,15 +65,15 @@ Smart Fishing is an IND4 assignment being developed in phases as a Node-RED envi
 - [x] Node-RED subscribes to the configured telemetry topic and emits normalized sensor payloads.
 - [ ] Malformed JSON/schema messages reach the MQTT error output.
 
-### Phase 4.1–4.2 (package and page structure verified)
+### Phase 4.1–4.3 (dashboard package, pages, and live data verified)
 
 - [x] FlowFuse Dashboard `1.34.1` is pinned and its UI node types load in the Node-RED editor.
 - [x] Overview, Environment, and Water Conditions pages render at their configured dashboard routes.
-- [ ] Live normalized signals are connected to widgets (Phase 4.3).
+- [x] Normalized weather, marine, and MQTT values reach their dashboard summaries, gauges, and charts.
 - [ ] Stale-data and API-error states are shown to users (Phase 4.4).
 
 ### Whole project (pending later phases)
 
-- [ ] Dashboard views and widgets are connected to validated signals.
+- [x] Dashboard views and widgets are connected to validated signals.
 - [ ] Stale-data and API-error states are visible to dashboard users.
 - [ ] Final deployment and repository hygiene are verified against the completed setup documentation.

@@ -30,7 +30,7 @@ This checklist tracks repository state. A task is complete only when implementat
 
 - [x] 4.1 Select and pin FlowFuse Dashboard `@flowfuse/node-red-dashboard` `1.34.1` for the selected runtime.
 - [x] 4.2 Build overview, weather, and water condition views; deploy and verify all three Dashboard 2 pages.
-- [ ] 4.3 Connect normalized data to appropriate gauges, charts, and summary values.
+- [x] 4.3 Connect normalized weather, marine, and MQTT data to dashboard gauges, charts, and summary values; verify live API and simulator values.
 - [ ] 4.4 Show API failures, missing values, and stale-data state in the UI.
 
 ## Phase 5: Packaging and release checks

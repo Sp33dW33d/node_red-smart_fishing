@@ -89,7 +89,7 @@
     "type": "function",
     "z": "a100000000000001",
     "name": "Validate and normalize weather",
-    "func": "if (msg.error) return null;\nconst data = msg.payload;\nif (msg.statusCode && (Number(msg.statusCode) < 200 || Number(msg.statusCode) >= 300)) {\n    node.error('Weather API returned HTTP ' + msg.statusCode, msg);\n    return null;\n}\nif (!data || typeof data !== 'object' || data.error || !data.current || !data.daily || !Array.isArray(data.daily.time) || !Array.isArray(data.daily.rain_sum)) {\n    node.error('Weather API response is missing current conditions or daily rain data', msg);\n    return null;\n}\nconst numeric = (value) => {\n    if (value === null || value === undefined || value === '') return null;\n    const result = Number(value);\n    return Number.isFinite(result) ? result : null;\n};\nconst temperature = numeric(data.current.temperature_2m);\nconst windSpeed = numeric(data.current.wind_speed_10m);\nif (temperature === null || windSpeed === null) {\n    node.error('Weather API response contains invalid temperature or wind speed', msg);\n    return null;\n}\nconst rainfallForecast = [];\nconst count = Math.min(5, data.daily.time.length, data.daily.rain_sum.length);\nfor (let i = 0; i < count; i += 1) {\n    const date = data.daily.time[i];\n    const rain = numeric(data.daily.rain_sum[i]);\n    if (typeof date === 'string' && !Number.isNaN(Date.parse(date)) && rain !== null && rain >= 0) {\n        rainfallForecast.push({ date: date, rainfallMm: rain });\n    }\n}\nif (rainfallForecast.length === 0) {\n    node.error('Weather API response contains no valid daily rainfall values', msg);\n    return null;\n}\nmsg.topic = 'environment/weather';\nmsg.payload = {\n    source: 'Open-Meteo Forecast API',\n    status: 'OK',\n    fetchedAt: new Date().toISOString(),\n    observedAt: typeof data.current.time === 'string' ? data.current.time : null,\n    location: { latitude: Number(env.get('LOCATION_LATITUDE')), longitude: Number(env.get('LOCATION_LONGITUDE')) },\n    current: { airTemperatureC: temperature, windSpeedKmh: windSpeed },\n    rainfallForecast: rainfallForecast\n};\nreturn msg;",
+    "func": "if (msg.error) return null;\nconst data = msg.payload;\nif (msg.statusCode && (Number(msg.statusCode) < 200 || Number(msg.statusCode) >= 300)) {\n    node.error('Weather API returned HTTP ' + msg.statusCode, msg);\n    return null;\n}\nif (!data || typeof data !== 'object' || data.error || !data.current || !data.daily || !Array.isArray(data.daily.time) || !Array.isArray(data.daily.rain_sum)) {\n    node.error('Weather API response is missing current conditions or daily rain data', msg);\n    return null;\n}\nconst numeric = (value) => {\n    if (value === null || value === undefined || value === '') return null;\n    const result = Number(value);\n    return Number.isFinite(result) ? result : null;\n};\nconst temperature = numeric(data.current.temperature_2m);\nconst windSpeed = numeric(data.current.wind_speed_10m);\nif (temperature === null || windSpeed === null) {\n    node.error('Weather API response contains invalid temperature or wind speed', msg);\n    return null;\n}\nconst rainfallForecast = [];\nconst count = Math.min(5, data.daily.time.length, data.daily.rain_sum.length);\nfor (let i = 0; i < count; i += 1) {\n    const date = data.daily.time[i];\n    const rain = numeric(data.daily.rain_sum[i]);\n    if (typeof date === 'string' && !Number.isNaN(Date.parse(date)) && rain !== null && rain >= 0) {\n        rainfallForecast.push({ date: date, rainfallMm: rain });\n    }\n}\nif (rainfallForecast.length === 0) {\n    node.error('Weather API response contains no valid daily rainfall values', msg);\n    return null;\n}\nmsg.topic = 'environment/weather';\nmsg.payload = {\n    source: 'Open-Meteo Forecast API',\n    status: 'OK',\n    fetchedAt: new Date().toISOString(),\n    observedAt: typeof data.current.time === 'string' ? data.current.time : null,\n    location: { name: String(env.get('LOCATION_NAME') || 'Sassoon Dock, Mumbai'), latitude: Number(env.get('LOCATION_LATITUDE')), longitude: Number(env.get('LOCATION_LONGITUDE')) },\n    current: { airTemperatureC: temperature, windSpeedKmh: windSpeed },\n    rainfallForecast: rainfallForecast\n};\nreturn msg;",
     "outputs": 1,
     "timeout": 0,
     "noerr": 0,
@@ -100,7 +100,8 @@
     "y": 140,
     "wires": [
       [
-        "a100000000000007"
+        "a100000000000007",
+        "b500000000000001"
       ]
     ]
   },
@@ -204,7 +205,7 @@
     "type": "function",
     "z": "a100000000000001",
     "name": "Validate and normalize marine",
-    "func": "if (msg.error) return null;\nconst data = msg.payload;\nif (msg.statusCode && (Number(msg.statusCode) < 200 || Number(msg.statusCode) >= 300)) {\n    node.error('Marine API returned HTTP ' + msg.statusCode, msg);\n    return null;\n}\nif (!data || typeof data !== 'object' || data.error || !data.hourly || !Array.isArray(data.hourly.time)) {\n    node.error('Marine API response is missing hourly forecast data', msg);\n    return null;\n}\nconst numeric = (value) => {\n    if (value === null || value === undefined || value === '') return null;\n    const result = Number(value);\n    return Number.isFinite(result) ? result : null;\n};\nconst nearest = (key) => {\n    const values = data.hourly[key];\n    if (!Array.isArray(values)) return null;\n    let best = null;\n    let bestDelta = Infinity;\n    const now = Date.now();\n    for (let i = 0; i < Math.min(values.length, data.hourly.time.length); i += 1) {\n        const value = numeric(values[i]);\n        const time = data.hourly.time[i];\n        const timestamp = typeof time === 'string' ? Date.parse(time) : NaN;\n        if (value === null || !Number.isFinite(timestamp)) continue;\n        const delta = Math.abs(timestamp - now);\n        if (delta < bestDelta) {\n            best = { value: value, time: time };\n            bestDelta = delta;\n        }\n    }\n    return best;\n};\nconst waterTemperature = nearest('sea_surface_temperature');\nconst seaLevel = nearest('sea_level_height_msl');\nconst waveHeight = nearest('wave_height');\nif (!waterTemperature && !seaLevel && !waveHeight) {\n    node.error('Marine API response contains no valid sea or wave measurements for this location', msg);\n    return null;\n}\nmsg.topic = 'environment/marine';\nmsg.payload = {\n    source: 'Open-Meteo Marine API',\n    status: waterTemperature && seaLevel ? 'OK' : 'PARTIAL',\n    fetchedAt: new Date().toISOString(),\n    location: { latitude: Number(env.get('LOCATION_LATITUDE')), longitude: Number(env.get('LOCATION_LONGITUDE')) },\n    current: {\n        waterTemperatureC: waterTemperature ? waterTemperature.value : null,\n        seaLevelHeightMslM: seaLevel ? seaLevel.value : null,\n        waveHeightM: waveHeight ? waveHeight.value : null\n    },\n    sampleTimes: {\n        waterTemperature: waterTemperature ? waterTemperature.time : null,\n        seaLevel: seaLevel ? seaLevel.time : null,\n        waveHeight: waveHeight ? waveHeight.time : null\n    }\n};\nreturn msg;",
+    "func": "if (msg.error) return null;\nconst data = msg.payload;\nif (msg.statusCode && (Number(msg.statusCode) < 200 || Number(msg.statusCode) >= 300)) {\n    node.error('Marine API returned HTTP ' + msg.statusCode, msg);\n    return null;\n}\nif (!data || typeof data !== 'object' || data.error || !data.hourly || !Array.isArray(data.hourly.time)) {\n    node.error('Marine API response is missing hourly forecast data', msg);\n    return null;\n}\nconst numeric = (value) => {\n    if (value === null || value === undefined || value === '') return null;\n    const result = Number(value);\n    return Number.isFinite(result) ? result : null;\n};\nconst nearest = (key) => {\n    const values = data.hourly[key];\n    if (!Array.isArray(values)) return null;\n    let best = null;\n    let bestDelta = Infinity;\n    const now = Date.now();\n    for (let i = 0; i < Math.min(values.length, data.hourly.time.length); i += 1) {\n        const value = numeric(values[i]);\n        const time = data.hourly.time[i];\n        const timestamp = typeof time === 'string' ? Date.parse(time) : NaN;\n        if (value === null || !Number.isFinite(timestamp)) continue;\n        const delta = Math.abs(timestamp - now);\n        if (delta < bestDelta) {\n            best = { value: value, time: time };\n            bestDelta = delta;\n        }\n    }\n    return best;\n};\nconst waterTemperature = nearest('sea_surface_temperature');\nconst seaLevel = nearest('sea_level_height_msl');\nconst waveHeight = nearest('wave_height');\nif (!waterTemperature && !seaLevel && !waveHeight) {\n    node.error('Marine API response contains no valid sea or wave measurements for this location', msg);\n    return null;\n}\nmsg.topic = 'environment/marine';\nmsg.payload = {\n    source: 'Open-Meteo Marine API',\n    status: waterTemperature && seaLevel ? 'OK' : 'PARTIAL',\n    fetchedAt: new Date().toISOString(),\n    location: { name: String(env.get('LOCATION_NAME') || 'Sassoon Dock, Mumbai'), latitude: Number(env.get('LOCATION_LATITUDE')), longitude: Number(env.get('LOCATION_LONGITUDE')) },\n    current: {\n        waterTemperatureC: waterTemperature ? waterTemperature.value : null,\n        seaLevelHeightMslM: seaLevel ? seaLevel.value : null,\n        waveHeightM: waveHeight ? waveHeight.value : null\n    },\n    sampleTimes: {\n        waterTemperature: waterTemperature ? waterTemperature.time : null,\n        seaLevel: seaLevel ? seaLevel.time : null,\n        waveHeight: waveHeight ? waveHeight.time : null\n    }\n};\nreturn msg;",
     "outputs": 1,
     "timeout": 0,
     "noerr": 0,
@@ -215,7 +216,8 @@
     "y": 320,
     "wires": [
       [
-        "a10000000000000d"
+        "a10000000000000d",
+        "b500000000000002"
       ]
     ]
   },
@@ -381,7 +383,8 @@
     "y": 560,
     "wires": [
       [
-        "a100000000000016"
+        "a100000000000016",
+        "b500000000000003"
       ]
     ]
   },
@@ -526,12 +529,27 @@
   {
     "id": "b400000000000005",
     "type": "ui-group",
-    "name": "Dashboard summary",
+    "name": "At-a-glance readings",
     "page": "b400000000000004",
     "width": 12,
     "height": 1,
-    "order": 0,
-    "showTitle": true,
+    "order": 1,
+    "showTitle": false,
+    "className": "",
+    "visible": true,
+    "disabled": false,
+    "groupType": "default",
+    "tab": ""
+  },
+  {
+    "id": "b600000000000001",
+    "type": "ui-group",
+    "name": "Overview introduction",
+    "page": "b400000000000004",
+    "width": 12,
+    "height": 1,
+    "order": 0.5,
+    "showTitle": false,
     "className": "",
     "visible": true,
     "disabled": false,
@@ -542,12 +560,12 @@
     "id": "b400000000000006",
     "type": "ui-markdown",
     "z": "b400000000000001",
-    "group": "b400000000000005",
+    "group": "b600000000000001",
     "name": "Getting started",
-    "order": 0,
+    "order": 0.5,
     "width": 12,
     "height": 3,
-    "content": "## Smart Fishing Monitor\n\nThis dashboard brings together forecast conditions for **Sassoon Dock, Mumbai** and telemetry from the local MQTT sensor simulator. The live summary values and status indicators will be connected in the next implementation step.",
+    "content": "## Smart Fishing Monitor\n\nLive weather forecasts and simulated sensor readings for **Sassoon Dock, Mumbai** (18.9110, 72.8253). Forecast data is model output; MQTT sensor values are generated by the local simulator.\n\nLocation details are read from `LOCATION_NAME`, `LOCATION_LATITUDE`, and `LOCATION_LONGITUDE` in Compose and passed through the [weather normalization flow](/#flow/a100000000000001).",
     "className": "",
     "x": 300,
     "y": 100,
@@ -595,11 +613,11 @@
   {
     "id": "b400000000000008",
     "type": "ui-group",
-    "name": "Environment conditions",
+    "name": "Weather conditions",
     "page": "b400000000000007",
     "width": 12,
     "height": 1,
-    "order": 0,
+    "order": 1,
     "showTitle": true,
     "className": "",
     "visible": true,
@@ -616,7 +634,7 @@
     "order": 0,
     "width": 12,
     "height": 3,
-    "content": "## Weather forecast\n\nThis view is for current air temperature, wind speed, and the five-day rainfall forecast from the Open-Meteo Forecast API at the configured location. Live values will be connected in Phase 4.3.",
+    "content": "## Weather forecast\n\nCurrent air temperature and wind speed are refreshed with the forecast. The rainfall chart shows the latest five-day forecast from Open-Meteo.",
     "className": "",
     "x": 300,
     "y": 200,
@@ -664,11 +682,26 @@
   {
     "id": "b40000000000000b",
     "type": "ui-group",
-    "name": "Water conditions",
+    "name": "Marine forecast",
     "page": "b40000000000000a",
     "width": 12,
     "height": 1,
-    "order": 0,
+    "order": 1,
+    "showTitle": true,
+    "className": "",
+    "visible": true,
+    "disabled": false,
+    "groupType": "default",
+    "tab": ""
+  },
+  {
+    "id": "b50000000000000a",
+    "type": "ui-group",
+    "name": "Sensor telemetry readings",
+    "page": "b40000000000000a",
+    "width": 12,
+    "height": 1,
+    "order": 2,
     "showTitle": true,
     "className": "",
     "visible": true,
@@ -680,17 +713,1114 @@
     "id": "b40000000000000c",
     "type": "ui-markdown",
     "z": "b400000000000001",
-    "group": "b40000000000000b",
+    "group": "b600000000000003",
     "name": "Marine and sensor data",
-    "order": 0,
+    "order": 0.5,
     "width": 12,
     "height": 3,
-    "content": "## Water conditions\n\nThis view brings together marine forecast conditions and simulated MQTT sensor telemetry, including water temperature, water level, catch count, and device battery. Live values will be connected in Phase 4.3.",
+    "content": "## Marine forecast and simulated telemetry\n\nMarine readings are model forecasts from Open-Meteo. Sensor readings are synthetic MQTT samples from the local simulator, not physical harbor instruments.",
     "className": "",
     "x": 300,
     "y": 300,
     "wires": [
       []
     ]
+  },
+  {
+    "id": "b500000000000001",
+    "type": "link out",
+    "z": "a100000000000001",
+    "name": "Weather dashboard feed",
+    "mode": "link",
+    "links": [
+      "b500000000000004"
+    ],
+    "x": 1390,
+    "y": 160,
+    "wires": []
+  },
+  {
+    "id": "b500000000000002",
+    "type": "link out",
+    "z": "a100000000000001",
+    "name": "Marine dashboard feed",
+    "mode": "link",
+    "links": [
+      "b500000000000005"
+    ],
+    "x": 1390,
+    "y": 340,
+    "wires": []
+  },
+  {
+    "id": "b500000000000003",
+    "type": "link out",
+    "z": "a100000000000001",
+    "name": "Telemetry dashboard feed",
+    "mode": "link",
+    "links": [
+      "b500000000000006"
+    ],
+    "x": 1390,
+    "y": 600,
+    "wires": []
+  },
+  {
+    "id": "b500000000000004",
+    "type": "link in",
+    "z": "b400000000000001",
+    "name": "Weather input",
+    "links": [
+      "b500000000000001"
+    ],
+    "x": 90,
+    "y": 140,
+    "wires": [
+      [
+        "b500000000000007"
+      ]
+    ]
+  },
+  {
+    "id": "b500000000000005",
+    "type": "link in",
+    "z": "b400000000000001",
+    "name": "Marine input",
+    "links": [
+      "b500000000000002"
+    ],
+    "x": 90,
+    "y": 270,
+    "wires": [
+      [
+        "b500000000000008"
+      ]
+    ]
+  },
+  {
+    "id": "b500000000000006",
+    "type": "link in",
+    "z": "b400000000000001",
+    "name": "MQTT telemetry input",
+    "links": [
+      "b500000000000003"
+    ],
+    "x": 90,
+    "y": 400,
+    "wires": [
+      [
+        "b500000000000009"
+      ]
+    ]
+  },
+  {
+    "id": "b500000000000007",
+    "type": "function",
+    "z": "b400000000000001",
+    "name": "Prepare weather dashboard values",
+    "func": "const p = msg.payload || {};\nconst current = p.current || {};\nconst rain = Array.isArray(p.rainfallForecast) ? p.rainfallForecast.filter((point) => typeof point.date === 'string' && Number.isFinite(point.rainfallMm)) : [];\nconst total = rain.reduce((sum, point) => sum + point.rainfallMm, 0);\nreturn [\n    { topic: 'air-temperature', payload: current.airTemperatureC },\n    { topic: 'wind-speed', payload: current.windSpeedKmh },\n    rain.length ? { topic: 'rainfall-forecast', action: 'replace', payload: rain.map((point) => ({ date: point.date, rainfallMm: point.rainfallMm })) } : null,\n    rain.length ? { topic: 'rainfall-total', payload: Number(total.toFixed(1)) } : null,\n    { payload: `## Smart Fishing Monitor\\n\\nLive weather forecasts and simulated sensor readings for **${String((p.location && p.location.name) || 'Configured location')}** (${Number(p.location && p.location.latitude).toFixed(4)}, ${Number(p.location && p.location.longitude).toFixed(4)}). Forecast data is model output; MQTT sensor values are generated by the local simulator.\\n\\nLocation details come from Compose variables \\`LOCATION_NAME\\`, \\`LOCATION_LATITUDE\\`, and \\`LOCATION_LONGITUDE\\` via the [weather normalization flow](/#flow/a100000000000001).` }\n];",
+    "outputs": 5,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 360,
+    "y": 140,
+    "wires": [
+      [
+        "b500000000000014",
+        "b500000000000015"
+      ],
+      [
+        "b500000000000016",
+        "b500000000000017"
+      ],
+      [
+        "b500000000000018"
+      ],
+      [
+        "b500000000000019"
+      ],
+      [
+        "b400000000000006"
+      ]
+    ]
+  },
+  {
+    "id": "b500000000000008",
+    "type": "function",
+    "z": "b400000000000001",
+    "name": "Prepare marine dashboard values",
+    "func": "const current = (msg.payload && msg.payload.current) || {};\nconst value = (key) => Number.isFinite(current[key]) ? { topic: key, payload: current[key] } : null;\nreturn [value('waterTemperatureC'), value('seaLevelHeightMslM'), value('waveHeightM')];",
+    "outputs": 3,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 360,
+    "y": 270,
+    "wires": [
+      [
+        "b50000000000001a",
+        "b50000000000001b"
+      ],
+      [
+        "b50000000000001c"
+      ],
+      [
+        "b50000000000001d",
+        "b50000000000001e"
+      ]
+    ]
+  },
+  {
+    "id": "b500000000000009",
+    "type": "function",
+    "z": "b400000000000001",
+    "name": "Prepare telemetry dashboard values",
+    "func": "const p = msg.payload || {};\nconst time = Date.parse(p.observedAt);\nconst scalar = (topic, value) => Number.isFinite(value) ? { topic, payload: value } : null;\nconst point = (topic, value) => Number.isFinite(value) && Number.isFinite(time) ? { topic, payload: { time, value } } : null;\nreturn [\n    scalar('sensor-water-temperature', p.waterTemperatureC),\n    point('sensor-water-temperature', p.waterTemperatureC),\n    scalar('sensor-water-level', p.waterLevelM),\n    point('sensor-water-level', p.waterLevelM),\n    scalar('sensor-catch-count', p.catchCount),\n    scalar('sensor-battery-voltage', p.batteryVoltageV)\n];",
+    "outputs": 6,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 360,
+    "y": 400,
+    "wires": [
+      [
+        "b500000000000020",
+        "b500000000000021"
+      ],
+      [
+        "b500000000000022"
+      ],
+      [
+        "b500000000000023"
+      ],
+      [
+        "b500000000000024"
+      ],
+      [
+        "b500000000000025",
+        "b500000000000026"
+      ],
+      [
+        "b500000000000027"
+      ]
+    ]
+  },
+  {
+    "id": "b500000000000014",
+    "type": "ui-gauge",
+    "z": "b400000000000001",
+    "name": "Air temperature gauge",
+    "group": "b400000000000008",
+    "order": 0,
+    "value": "payload",
+    "valueType": "msg",
+    "width": 6,
+    "height": 3,
+    "gtype": "gauge-half",
+    "gstyle": "rounded",
+    "title": "Air temperature",
+    "alwaysShowTitle": true,
+    "floatingTitlePosition": "top-left",
+    "units": "°C",
+    "icon": "thermometer",
+    "prefix": "",
+    "suffix": "",
+    "segments": [
+      {
+        "color": "#3b82f6",
+        "from": -10,
+        "text": "",
+        "textType": "label"
+      },
+      {
+        "color": "#14b8a6",
+        "from": 10,
+        "text": "",
+        "textType": "label"
+      },
+      {
+        "color": "#22c55e",
+        "from": 20,
+        "text": "",
+        "textType": "label"
+      },
+      {
+        "color": "#f59e0b",
+        "from": 35,
+        "text": "",
+        "textType": "label"
+      },
+      {
+        "color": "#ef4444",
+        "from": 43,
+        "text": "",
+        "textType": "label"
+      }
+    ],
+    "min": -10,
+    "max": 50,
+    "sizeThickness": 16,
+    "sizeGap": 4,
+    "sizeKeyThickness": 8,
+    "styleRounded": true,
+    "styleGlow": false,
+    "className": "",
+    "x": 790,
+    "y": 520,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "b500000000000016",
+    "type": "ui-gauge",
+    "z": "b400000000000001",
+    "name": "Wind speed gauge",
+    "group": "b400000000000008",
+    "order": 1,
+    "value": "payload",
+    "valueType": "msg",
+    "width": 6,
+    "height": 3,
+    "gtype": "gauge-half",
+    "gstyle": "rounded",
+    "title": "Wind speed",
+    "alwaysShowTitle": true,
+    "floatingTitlePosition": "top-left",
+    "units": "km/h",
+    "icon": "weather-windy",
+    "prefix": "",
+    "suffix": "",
+    "segments": [
+      {
+        "color": "#22c55e",
+        "from": 0,
+        "text": "",
+        "textType": "label"
+      },
+      {
+        "color": "#facc15",
+        "from": 25,
+        "text": "",
+        "textType": "label"
+      },
+      {
+        "color": "#f59e0b",
+        "from": 45,
+        "text": "",
+        "textType": "label"
+      },
+      {
+        "color": "#ef4444",
+        "from": 65,
+        "text": "",
+        "textType": "label"
+      }
+    ],
+    "min": 0,
+    "max": 80,
+    "sizeThickness": 16,
+    "sizeGap": 4,
+    "sizeKeyThickness": 8,
+    "styleRounded": true,
+    "styleGlow": false,
+    "className": "",
+    "x": 1050,
+    "y": 520,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "b500000000000018",
+    "type": "ui-chart",
+    "z": "b400000000000001",
+    "group": "b600000000000005",
+    "name": "Five-day rainfall chart",
+    "label": "Five-day rainfall forecast",
+    "order": 0.5,
+    "chartType": "bar",
+    "category": "topic",
+    "categoryType": "msg",
+    "xAxisLabel": "Date",
+    "xAxisProperty": "date",
+    "xAxisPropertyType": "property",
+    "xAxisType": "category",
+    "xAxisFormat": "",
+    "xAxisFormatType": "auto",
+    "xmin": "",
+    "xmax": "",
+    "yAxisLabel": "Rainfall (mm)",
+    "yAxisProperty": "rainfallMm",
+    "yAxisPropertyType": "property",
+    "ymin": 0,
+    "ymax": "",
+    "bins": 10,
+    "action": "replace",
+    "stackSeries": false,
+    "pointShape": "circle",
+    "pointRadius": 3,
+    "showLegend": false,
+    "removeOlder": 1,
+    "removeOlderUnit": "3600",
+    "removeOlderPoints": "",
+    "colors": [
+      "#087e8b",
+      "#f2a541"
+    ],
+    "textColor": [
+      "#666666"
+    ],
+    "textColorDefault": true,
+    "gridColor": [
+      "#e5e5e5"
+    ],
+    "gridColorDefault": true,
+    "width": 12,
+    "height": 7,
+    "className": "",
+    "interpolation": "linear",
+    "x": 1110,
+    "y": 700,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "b500000000000019",
+    "type": "ui-text",
+    "z": "b400000000000001",
+    "name": "Five-day rainfall total",
+    "group": "b400000000000005",
+    "order": 2,
+    "width": 4,
+    "height": 1,
+    "label": "5-day rainfall (mm)",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": true,
+    "font": "Helvetica",
+    "fontSize": 18,
+    "color": "#087e8b",
+    "wrapText": false,
+    "className": "",
+    "value": "payload",
+    "valueType": "msg",
+    "x": 1310,
+    "y": 520,
+    "wires": []
+  },
+  {
+    "id": "b500000000000015",
+    "type": "ui-text",
+    "z": "b400000000000001",
+    "name": "Overview air temperature",
+    "group": "b400000000000005",
+    "order": 0.5,
+    "width": 4,
+    "height": 1,
+    "label": "Air temperature (°C)",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": true,
+    "font": "Helvetica",
+    "fontSize": 18,
+    "color": "#087e8b",
+    "wrapText": false,
+    "className": "",
+    "value": "payload",
+    "valueType": "msg",
+    "x": 790,
+    "y": 520,
+    "wires": []
+  },
+  {
+    "id": "b500000000000017",
+    "type": "ui-text",
+    "z": "b400000000000001",
+    "name": "Overview wind speed",
+    "group": "b400000000000005",
+    "order": 1,
+    "width": 4,
+    "height": 1,
+    "label": "Wind speed (km/h)",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": true,
+    "font": "Helvetica",
+    "fontSize": 18,
+    "color": "#087e8b",
+    "wrapText": false,
+    "className": "",
+    "value": "payload",
+    "valueType": "msg",
+    "x": 1050,
+    "y": 520,
+    "wires": []
+  },
+  {
+    "id": "b50000000000001a",
+    "type": "ui-gauge",
+    "z": "b400000000000001",
+    "name": "Marine sea temperature gauge",
+    "group": "b40000000000000b",
+    "order": 0.5,
+    "value": "payload",
+    "valueType": "msg",
+    "width": 4,
+    "height": 3,
+    "gtype": "gauge-half",
+    "gstyle": "rounded",
+    "title": "Sea-surface temperature",
+    "alwaysShowTitle": true,
+    "floatingTitlePosition": "top-left",
+    "units": "°C",
+    "icon": "thermometer",
+    "prefix": "",
+    "suffix": "",
+    "segments": [
+      {
+        "color": "#3b82f6",
+        "from": -2,
+        "text": "",
+        "textType": "label"
+      },
+      {
+        "color": "#14b8a6",
+        "from": 10,
+        "text": "",
+        "textType": "label"
+      },
+      {
+        "color": "#22c55e",
+        "from": 18,
+        "text": "",
+        "textType": "label"
+      },
+      {
+        "color": "#f59e0b",
+        "from": 28,
+        "text": "",
+        "textType": "label"
+      },
+      {
+        "color": "#ef4444",
+        "from": 32,
+        "text": "",
+        "textType": "label"
+      }
+    ],
+    "min": -2,
+    "max": 35,
+    "sizeThickness": 16,
+    "sizeGap": 4,
+    "sizeKeyThickness": 8,
+    "styleRounded": true,
+    "styleGlow": false,
+    "className": "",
+    "x": 790,
+    "y": 520,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "b50000000000001c",
+    "type": "ui-gauge",
+    "z": "b400000000000001",
+    "name": "Marine sea level gauge",
+    "group": "b40000000000000b",
+    "order": 1,
+    "value": "payload",
+    "valueType": "msg",
+    "width": 4,
+    "height": 3,
+    "gtype": "gauge-half",
+    "gstyle": "rounded",
+    "title": "Sea level (MSL)",
+    "alwaysShowTitle": true,
+    "floatingTitlePosition": "top-left",
+    "units": "m",
+    "icon": "waves",
+    "prefix": "",
+    "suffix": "",
+    "segments": [
+      {
+        "color": "#3b82f6",
+        "from": -1.5,
+        "text": "",
+        "textType": "label"
+      },
+      {
+        "color": "#22c55e",
+        "from": -0.3,
+        "text": "",
+        "textType": "label"
+      },
+      {
+        "color": "#facc15",
+        "from": 0.5,
+        "text": "",
+        "textType": "label"
+      },
+      {
+        "color": "#ef4444",
+        "from": 1.1,
+        "text": "",
+        "textType": "label"
+      }
+    ],
+    "min": -1.5,
+    "max": 1.5,
+    "sizeThickness": 16,
+    "sizeGap": 4,
+    "sizeKeyThickness": 8,
+    "styleRounded": true,
+    "styleGlow": false,
+    "className": "",
+    "x": 1050,
+    "y": 520,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "b50000000000001d",
+    "type": "ui-gauge",
+    "z": "b400000000000001",
+    "name": "Wave height gauge",
+    "group": "b40000000000000b",
+    "order": 2,
+    "value": "payload",
+    "valueType": "msg",
+    "width": 4,
+    "height": 3,
+    "gtype": "gauge-half",
+    "gstyle": "rounded",
+    "title": "Wave height",
+    "alwaysShowTitle": true,
+    "floatingTitlePosition": "top-left",
+    "units": "m",
+    "icon": "waves",
+    "prefix": "",
+    "suffix": "",
+    "segments": [
+      {
+        "color": "#22c55e",
+        "from": 0,
+        "text": "",
+        "textType": "label"
+      },
+      {
+        "color": "#facc15",
+        "from": 2,
+        "text": "",
+        "textType": "label"
+      },
+      {
+        "color": "#f59e0b",
+        "from": 4,
+        "text": "",
+        "textType": "label"
+      },
+      {
+        "color": "#ef4444",
+        "from": 6,
+        "text": "",
+        "textType": "label"
+      }
+    ],
+    "min": 0,
+    "max": 10,
+    "sizeThickness": 16,
+    "sizeGap": 4,
+    "sizeKeyThickness": 8,
+    "styleRounded": true,
+    "styleGlow": false,
+    "className": "",
+    "x": 1310,
+    "y": 520,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "b50000000000001b",
+    "type": "ui-text",
+    "z": "b400000000000001",
+    "name": "Overview sea temperature",
+    "group": "b400000000000005",
+    "order": 3,
+    "width": 4,
+    "height": 1,
+    "label": "Sea-surface temperature (°C)",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": true,
+    "font": "Helvetica",
+    "fontSize": 18,
+    "color": "#087e8b",
+    "wrapText": false,
+    "className": "",
+    "value": "payload",
+    "valueType": "msg",
+    "x": 790,
+    "y": 600,
+    "wires": []
+  },
+  {
+    "id": "b50000000000001e",
+    "type": "ui-text",
+    "z": "b400000000000001",
+    "name": "Overview wave height",
+    "group": "b400000000000005",
+    "order": 4,
+    "width": 4,
+    "height": 1,
+    "label": "Wave height (m)",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": true,
+    "font": "Helvetica",
+    "fontSize": 18,
+    "color": "#087e8b",
+    "wrapText": false,
+    "className": "",
+    "value": "payload",
+    "valueType": "msg",
+    "x": 1050,
+    "y": 600,
+    "wires": []
+  },
+  {
+    "id": "b500000000000020",
+    "type": "ui-gauge",
+    "z": "b400000000000001",
+    "name": "Sensor water temperature gauge",
+    "group": "b50000000000000a",
+    "order": 0.5,
+    "value": "payload",
+    "valueType": "msg",
+    "width": 3,
+    "height": 3,
+    "gtype": "gauge-half",
+    "gstyle": "rounded",
+    "title": "Sensor water temperature",
+    "alwaysShowTitle": true,
+    "floatingTitlePosition": "top-left",
+    "units": "°C",
+    "icon": "thermometer",
+    "prefix": "",
+    "suffix": "",
+    "segments": [
+      {
+        "color": "#3b82f6",
+        "from": 0,
+        "text": "",
+        "textType": "label"
+      },
+      {
+        "color": "#22c55e",
+        "from": 15,
+        "text": "",
+        "textType": "label"
+      },
+      {
+        "color": "#facc15",
+        "from": 29,
+        "text": "",
+        "textType": "label"
+      },
+      {
+        "color": "#ef4444",
+        "from": 36,
+        "text": "",
+        "textType": "label"
+      }
+    ],
+    "min": 0,
+    "max": 40,
+    "sizeThickness": 16,
+    "sizeGap": 4,
+    "sizeKeyThickness": 8,
+    "styleRounded": true,
+    "styleGlow": false,
+    "className": "",
+    "x": 790,
+    "y": 520,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "b500000000000022",
+    "type": "ui-chart",
+    "z": "b400000000000001",
+    "group": "b600000000000004",
+    "name": "Sensor water temperature chart",
+    "label": "Sensor water temperature (last hour)",
+    "order": 0.5,
+    "chartType": "line",
+    "category": "topic",
+    "categoryType": "msg",
+    "xAxisLabel": "Time",
+    "xAxisProperty": "time",
+    "xAxisPropertyType": "property",
+    "xAxisType": "time",
+    "xAxisFormat": "",
+    "xAxisFormatType": "auto",
+    "xmin": "",
+    "xmax": "",
+    "yAxisLabel": "Temperature (°C)",
+    "yAxisProperty": "value",
+    "yAxisPropertyType": "property",
+    "ymin": 20,
+    "ymax": 35,
+    "bins": 10,
+    "action": "append",
+    "stackSeries": false,
+    "pointShape": "circle",
+    "pointRadius": 3,
+    "showLegend": false,
+    "removeOlder": 1,
+    "removeOlderUnit": "3600",
+    "removeOlderPoints": "",
+    "colors": [
+      "#087e8b",
+      "#f2a541"
+    ],
+    "textColor": [
+      "#666666"
+    ],
+    "textColorDefault": true,
+    "gridColor": [
+      "#e5e5e5"
+    ],
+    "gridColorDefault": true,
+    "width": 6,
+    "height": 7,
+    "className": "",
+    "interpolation": "linear",
+    "x": 1110,
+    "y": 880,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "b500000000000023",
+    "type": "ui-gauge",
+    "z": "b400000000000001",
+    "name": "Sensor water level gauge",
+    "group": "b50000000000000a",
+    "order": 1,
+    "value": "payload",
+    "valueType": "msg",
+    "width": 3,
+    "height": 3,
+    "gtype": "gauge-half",
+    "gstyle": "rounded",
+    "title": "Sensor water level",
+    "alwaysShowTitle": true,
+    "floatingTitlePosition": "top-left",
+    "units": "m",
+    "icon": "waves",
+    "prefix": "",
+    "suffix": "",
+    "segments": [
+      {
+        "color": "#3b82f6",
+        "from": 0,
+        "text": "",
+        "textType": "label"
+      },
+      {
+        "color": "#22c55e",
+        "from": 0.8,
+        "text": "",
+        "textType": "label"
+      },
+      {
+        "color": "#facc15",
+        "from": 1.8,
+        "text": "",
+        "textType": "label"
+      },
+      {
+        "color": "#ef4444",
+        "from": 2.5,
+        "text": "",
+        "textType": "label"
+      }
+    ],
+    "min": 0,
+    "max": 3,
+    "sizeThickness": 16,
+    "sizeGap": 4,
+    "sizeKeyThickness": 8,
+    "styleRounded": true,
+    "styleGlow": false,
+    "className": "",
+    "x": 1050,
+    "y": 520,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "b500000000000024",
+    "type": "ui-chart",
+    "z": "b400000000000001",
+    "group": "b600000000000004",
+    "name": "Sensor water level chart",
+    "label": "Sensor water level (last hour)",
+    "order": 1.5,
+    "chartType": "line",
+    "category": "topic",
+    "categoryType": "msg",
+    "xAxisLabel": "Time",
+    "xAxisProperty": "time",
+    "xAxisPropertyType": "property",
+    "xAxisType": "time",
+    "xAxisFormat": "",
+    "xAxisFormatType": "auto",
+    "xmin": "",
+    "xmax": "",
+    "yAxisLabel": "Water level (m)",
+    "yAxisProperty": "value",
+    "yAxisPropertyType": "property",
+    "ymin": 0,
+    "ymax": 3,
+    "bins": 10,
+    "action": "append",
+    "stackSeries": false,
+    "pointShape": "circle",
+    "pointRadius": 3,
+    "showLegend": false,
+    "removeOlder": 1,
+    "removeOlderUnit": "3600",
+    "removeOlderPoints": "",
+    "colors": [
+      "#087e8b",
+      "#f2a541"
+    ],
+    "textColor": [
+      "#666666"
+    ],
+    "textColorDefault": true,
+    "gridColor": [
+      "#e5e5e5"
+    ],
+    "gridColorDefault": true,
+    "width": 6,
+    "height": 7,
+    "className": "",
+    "interpolation": "linear",
+    "x": 1110,
+    "y": 970,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "b500000000000027",
+    "type": "ui-gauge",
+    "z": "b400000000000001",
+    "name": "Sensor battery voltage gauge",
+    "group": "b50000000000000a",
+    "order": 2,
+    "value": "payload",
+    "valueType": "msg",
+    "width": 3,
+    "height": 3,
+    "gtype": "gauge-half",
+    "gstyle": "rounded",
+    "title": "Sensor battery",
+    "alwaysShowTitle": true,
+    "floatingTitlePosition": "top-left",
+    "units": "V",
+    "icon": "battery",
+    "prefix": "",
+    "suffix": "",
+    "segments": [
+      {
+        "color": "#ef4444",
+        "from": 3,
+        "text": "",
+        "textType": "label"
+      },
+      {
+        "color": "#f59e0b",
+        "from": 3.4,
+        "text": "",
+        "textType": "label"
+      },
+      {
+        "color": "#22c55e",
+        "from": 3.65,
+        "text": "",
+        "textType": "label"
+      },
+      {
+        "color": "#3b82f6",
+        "from": 4.0,
+        "text": "",
+        "textType": "label"
+      }
+    ],
+    "min": 3,
+    "max": 4.3,
+    "sizeThickness": 16,
+    "sizeGap": 4,
+    "sizeKeyThickness": 8,
+    "styleRounded": true,
+    "styleGlow": false,
+    "className": "",
+    "x": 1310,
+    "y": 520,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "b500000000000025",
+    "type": "ui-text",
+    "z": "b400000000000001",
+    "name": "Sensor catch count",
+    "group": "b50000000000000a",
+    "order": 3,
+    "width": 3,
+    "height": 1,
+    "label": "Catch count",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": true,
+    "font": "Helvetica",
+    "fontSize": 18,
+    "color": "#087e8b",
+    "wrapText": false,
+    "className": "",
+    "value": "payload",
+    "valueType": "msg",
+    "x": 790,
+    "y": 600,
+    "wires": []
+  },
+  {
+    "id": "b500000000000021",
+    "type": "ui-text",
+    "z": "b400000000000001",
+    "name": "Overview sensor water temperature",
+    "group": "b400000000000005",
+    "order": 5,
+    "width": 4,
+    "height": 1,
+    "label": "Sensor water temperature (°C)",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": true,
+    "font": "Helvetica",
+    "fontSize": 18,
+    "color": "#087e8b",
+    "wrapText": false,
+    "className": "",
+    "value": "payload",
+    "valueType": "msg",
+    "x": 1310,
+    "y": 600,
+    "wires": []
+  },
+  {
+    "id": "b500000000000026",
+    "type": "ui-text",
+    "z": "b400000000000001",
+    "name": "Overview catch count",
+    "group": "b400000000000005",
+    "order": 6,
+    "width": 4,
+    "height": 1,
+    "label": "Simulated catch count",
+    "format": "{{msg.payload}}",
+    "layout": "row-spread",
+    "style": true,
+    "font": "Helvetica",
+    "fontSize": 18,
+    "color": "#087e8b",
+    "wrapText": false,
+    "className": "",
+    "value": "payload",
+    "valueType": "msg",
+    "x": 790,
+    "y": 680,
+    "wires": []
+  },
+  {
+    "id": "b600000000000002",
+    "type": "ui-markdown",
+    "z": "b400000000000001",
+    "group": "b400000000000005",
+    "name": "At-a-glance heading",
+    "order": 0.25,
+    "width": 12,
+    "height": 1,
+    "content": "### At-a-glance readings",
+    "className": "",
+    "x": 790,
+    "y": 460,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "b600000000000003",
+    "type": "ui-group",
+    "name": "Water conditions introduction",
+    "page": "b40000000000000a",
+    "width": 12,
+    "height": 1,
+    "order": 0.5,
+    "showTitle": false,
+    "className": "",
+    "visible": true,
+    "disabled": false,
+    "groupType": "default",
+    "tab": ""
+  },
+  {
+    "id": "b600000000000004",
+    "type": "ui-group",
+    "name": "Sensor trends",
+    "page": "b40000000000000a",
+    "width": 12,
+    "height": 1,
+    "order": 3,
+    "showTitle": true,
+    "className": "",
+    "visible": true,
+    "disabled": false,
+    "groupType": "default",
+    "tab": ""
+  },
+  {
+    "id": "b600000000000005",
+    "type": "ui-group",
+    "name": "Five-day rainfall forecast",
+    "page": "b400000000000007",
+    "width": 12,
+    "height": 1,
+    "order": 2,
+    "showTitle": true,
+    "className": "",
+    "visible": true,
+    "disabled": false,
+    "groupType": "default",
+    "tab": ""
   }
 ]

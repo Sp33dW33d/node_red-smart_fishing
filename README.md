@@ -1,6 +1,6 @@
 # Smart Fishing
 
-Smart Fishing is an IND4 assignment project built with Node-RED. It polls Open-Meteo weather and marine forecast APIs and ingests simulated MQTT sensor messages, validating and normalizing the data for downstream use. Phase 4 adds a FlowFuse Dashboard interface. The Overview, Environment, and Water Conditions pages are built; live metrics are the next implementation step.
+Smart Fishing is an IND4 assignment project built with Node-RED. It polls Open-Meteo weather and marine forecast APIs and ingests simulated MQTT sensor messages, validating and normalizing the data for downstream use. Phase 4 adds a FlowFuse Dashboard interface. Overview, Environment, and Water Conditions now show live values from Open-Meteo and simulated MQTT telemetry.
 
 ## Current status
 
@@ -9,8 +9,8 @@ Smart Fishing is an IND4 assignment project built with Node-RED. It polls Open-M
 - Marine output contains the nearest hourly sea-surface temperature, sea-level height relative to mean sea level, and wave height values available from the response.
 - API, HTTP, and validation failures are formatted into error messages and sent to the Debug sidebar.
 - Phase 3.1–3.4 provide a Mosquitto broker, Python simulator, and Node-RED MQTT ingestion flow. A live simulator message has been received and normalized.
-- The sample coordinates are Sassoon Dock, Colaba, Mumbai (`18.9110, 72.8253`). They are configurable and represent a forecast grid location near the harbor, not a dockside sensor.
-- FlowFuse Dashboard `1.34.1` provides Overview, Environment, and Water Conditions pages at `/dashboard/overview`, `/dashboard/environment`, and `/dashboard/water-conditions`. The pages currently describe their intended data; live values and status indicators are pending Phase 4.3–4.4.
+- The sample location is Sassoon Dock, Mumbai (`18.9110, 72.8253`). The Overview displays the configured location name and coordinates from `LOCATION_NAME`, `LOCATION_LATITUDE`, and `LOCATION_LONGITUDE`; the weather normalization node supplies these values to the dashboard. Coordinates represent a forecast grid location near the harbor, not a dockside sensor.
+- FlowFuse Dashboard `1.34.1` provides Overview, Environment, and Water Conditions pages at `/dashboard/overview`, `/dashboard/environment`, and `/dashboard/water-conditions`. Normalized weather, marine, and MQTT values feed summary tiles, gauges, and charts. Explicit missing-value, stale-data, and API-error states are pending Phase 4.4.
 
 ## Repository layout
 
@@ -62,7 +62,7 @@ No Open-Meteo API key is required for the configured forecast endpoints. Use coo
 
    On PowerShell, use `Copy-Item .env.example .env`.
 
-2. Set `NODE_RED_CREDENTIAL_SECRET` in `.env` to a long, private value. Set `LOCATION_LATITUDE` and `LOCATION_LONGITUDE` to the desired location if needed. Set `PORT` if local port `1880` is already occupied.
+2. Set `NODE_RED_CREDENTIAL_SECRET` in `.env` to a long, private value. Set `LOCATION_NAME`, `LOCATION_LATITUDE`, and `LOCATION_LONGITUDE` together for the desired location. Set `PORT` if local port `1880` is already occupied.
 
 3. Start Node-RED:
 
@@ -70,7 +70,7 @@ No Open-Meteo API key is required for the configured forecast endpoints. Use coo
    docker compose up -d
    ```
 
-4. Open the Node-RED editor at `http://localhost:<PORT>` (default `http://localhost:1880`) to inspect flows and Debug output. Open the dashboard at `http://localhost:<PORT>/dashboard/overview`; use its navigation menu to switch between Overview, Environment, and Water Conditions. Live metric widgets will be connected in Phase 4.3. Both API flows trigger shortly after startup and repeat every 15 minutes.
+4. Open the Node-RED editor at `http://localhost:<PORT>` (default `http://localhost:1880`) to inspect flows and Debug output. Open the dashboard at `http://localhost:<PORT>/dashboard/overview`; use its navigation menu to switch between Overview, Environment, and Water Conditions. Weather and marine values refresh shortly after deployment and every 15 minutes. MQTT sensor gauges and trend charts update when the simulator publishes; run the simulator as described below to populate them.
 
 5. Stop the container while retaining its runtime data:
 
@@ -88,6 +88,7 @@ The service is bound to `127.0.0.1` by default. It is intended for local develop
 | `TZ` | `Asia/Calcutta` | Container timezone. |
 | `NODE_RED_CREDENTIAL_SECRET` | Required | Secret used by Node-RED to encrypt stored credentials. |
 | `NODE_RED_FORCE_IPV4` | `true` | Prefer IPv4 for outbound HTTPS; set to `false` if the Docker host has working IPv6 routing. |
+| `LOCATION_NAME` | `Sassoon Dock, Mumbai` | Name displayed for the configured forecast location. |
 | `LOCATION_LATITUDE` | `18.9110` | Forecast latitude (Sassoon Dock sample). |
 | `LOCATION_LONGITUDE` | `72.8253` | Forecast longitude (Sassoon Dock sample). |
 | `WEATHER_API_URL` | Open-Meteo Forecast API | Weather endpoint. |
@@ -123,7 +124,7 @@ The local `.env` file is ignored by Git. Keep secrets out of the flow export and
 - **Editor does not open:** Check `docker compose ps` and `docker compose logs --tail=100 node-red`. Confirm that the chosen host `PORT` is free.
 - **No normalized API messages:** Open the Debug sidebar, then inspect container logs and configured coordinates. The marine model may not return data for every location.
 - **HTTPS connection failures in WSL/Docker:** Keep `NODE_RED_FORCE_IPV4=true` when IPv6 resolves but is not routable from the container.
-- **Dashboard page does not load:** Check `docker compose logs --tail=100 node-red` and confirm the Dashboard 2 package is installed. Open `/dashboard/overview`, `/dashboard/environment`, or `/dashboard/water-conditions` under the configured host port. The current pages are structure and intro text; live widgets are added in Phase 4.3–4.4.
+- **Dashboard page does not load:** Check `docker compose logs --tail=100 node-red` and confirm the Dashboard 2 package is installed. Open `/dashboard/overview`, `/dashboard/environment`, or `/dashboard/water-conditions` under the configured host port. Weather and marine widgets wait for the API refresh, and MQTT widgets wait for simulator messages. Error, missing-value, and stale-data indicators are planned for Phase 4.4.
 
 ## Data attribution and license
 

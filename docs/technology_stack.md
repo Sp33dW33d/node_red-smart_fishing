@@ -1,6 +1,6 @@
 # Technology Stack
 
-This document records the current Phase 2 API flow, Phase 3 MQTT broker/publisher/ingestion flow, and Phase 4.2 Dashboard 2 pages. MQTT live telemetry has been normalized; the dashboard page structure is in place, with live metric wiring still pending.
+This document records the current Phase 2 API flow, Phase 3 MQTT broker/publisher/ingestion flow, and Phase 4.3 Dashboard 2 pages and live metrics. MQTT telemetry and Open-Meteo responses feed dashboard summary values, gauges, and charts.
 
 ## Implemented stack
 
@@ -15,15 +15,14 @@ This document records the current Phase 2 API flow, Phase 3 MQTT broker/publishe
 | MQTT publisher | Python 3.10+ and `paho-mqtt==2.1.0` | Phase 3.2 synthetic telemetry publisher in `scripts/simulate-mqtt.py`. |
 | Dashboard UI package | FlowFuse Dashboard `@flowfuse/node-red-dashboard` `1.34.1` | Pinned in `node-red/package.json`; compatible with the selected Node-RED runtime. |
 | Node types | Node-RED built-ins | Inject, Function, HTTP Request, MQTT In, Catch, and Debug. |
-| Dashboard nodes | FlowFuse Dashboard 2 | One UI base/theme, three pages/groups, and introductory Markdown widgets. |
+| Dashboard nodes | FlowFuse Dashboard 2 | One UI base/theme, three pages, eight groups, four Markdown widgets, eight gauges, eight text values, three charts, and cross-tab Link nodes. |
 
-MQTT In is supplied by the Node-RED core nodes. FlowFuse Dashboard is installed as a pinned Node-RED user dependency. Its Overview, Environment, and Water Conditions pages are in `flows/smart-fishing.json` and have been verified in the live dashboard. Widgets do not display normalized values yet.
+MQTT In is supplied by the Node-RED core nodes. FlowFuse Dashboard is installed as a pinned Node-RED user dependency. Its Overview, Environment, and Water Conditions pages are in `flows/smart-fishing.json`. Live API data and MQTT simulator samples have been verified in the text values, gauges, rainfall forecast chart, and sensor trend charts.
 
 ## Planned implementation
 
 | Component | Planned use | Phase |
 |---|---|---|
-| Connect normalized data to gauges, charts, and summary values | Populate the existing dashboard pages with live readings | 4.3 |
 | Show error, missing-value, and stale-data states | Make data quality visible in the dashboard | 4.4 |
 
 Select and pin versions when planned dependencies are implemented. Draft dependency names and versions are not current requirements.
