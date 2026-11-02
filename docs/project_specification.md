@@ -29,9 +29,11 @@ Smart Fishing is an IND4 assignment being developed in phases as a Node-RED envi
 | P4-4 | Display normalized marine values in dashboard gauges and summaries. | Implemented and live values verified; Phase 4.4 |
 | P4-5 | Display normalized MQTT telemetry in dashboard gauges, trends, and summaries. | Implemented and simulator values verified; Phase 4.5 |
 | P4-6 | Combine weather, marine, and telemetry readings in Overview summary values. | Implemented and verified; Phase 4.6 |
-| P4-7 | Let users select the dashboard update interval. | Implemented and verified; Phase 4.7 |
+| P4-7 | Let users select independent API polling and sensor display intervals. | Implemented and verified; Phase 4.7 |
 | P4-8 | Indicate API failures, missing values, and stale data in the UI. | Planned: Phase 4.8 |
 | P4-9 | Show cached seven-day weather and marine history charts. | In progress; Phase 4.9 |
+| P4-10 | Combine current weather and marine values into a fishing-conditions recommendation and publish it for downstream consumers. | Implemented; backend flow and MQTT contract |
+| P4-11 | Display the fishing-conditions recommendation and explanation in the dashboard. | Planned |
 | P5-1 | Document and verify clean deployment of the completed implementation. | Phase 5 |
 
 ## Data and behavior

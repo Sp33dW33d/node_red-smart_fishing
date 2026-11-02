@@ -43,6 +43,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="Simulated device identifier (default: demo-01).",
     )
     parser.add_argument(
+        "--conditions-topic",
+        default=os.getenv("MQTT_CONDITIONS_TOPIC", "smartfishing/conditions"),
+        help="MQTT topic carrying the Node-RED fishing conditions recommendation.",
+    )
+    parser.add_argument(
         "--interval",
         type=float,
         default=5.0,
@@ -57,7 +62,13 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def make_payload(device_id: str, sequence: int, catch_count: int) -> dict[str, object]:
+def make_payload(
+    device_id: str,
+    sequence: int,
+    catch_count: int,
+    condition_status: str,
+    catch_rate_multiplier: float,
+) -> dict[str, object]:
     """Build one realistic-looking, timestamped sample for development only."""
     phase = sequence / 5.0
     return {
@@ -68,6 +79,8 @@ def make_payload(device_id: str, sequence: int, catch_count: int) -> dict[str, o
         "water_temperature_c": round(27.0 + math.sin(phase) * 0.6 + random.uniform(-0.15, 0.15), 2),
         "water_level_m": round(1.4 + math.sin(phase / 1.5) * 0.08 + random.uniform(-0.02, 0.02), 3),
         "catch_count": catch_count,
+        "conditions_status": condition_status,
+        "catch_rate_multiplier": round(catch_rate_multiplier, 2),
         "battery_voltage_v": round(3.75 + random.uniform(-0.04, 0.04), 2),
     }
 
@@ -81,8 +94,8 @@ def main() -> int:
     if not 1 <= args.port <= 65535:
         LOGGER.error("Broker port must be between 1 and 65535")
         return 2
-    if not args.topic_prefix.strip("/") or not args.device_id.strip("/"):
-        LOGGER.error("Topic prefix and device ID cannot be empty")
+    if not args.topic_prefix.strip("/") or not args.device_id.strip("/") or not args.conditions_topic.strip("/"):
+        LOGGER.error("Topic prefix, device ID, and conditions topic cannot be empty")
         return 2
     if args.interval <= 0:
         LOGGER.error("Interval must be greater than zero")
@@ -92,11 +105,15 @@ def main() -> int:
         return 2
 
     topic = f"{args.topic_prefix.strip('/')}/{args.device_id.strip('/')}/telemetry"
-    if "+" in topic or "#" in topic:
+    conditions_topic = args.conditions_topic.strip("/")
+    if "+" in topic or "#" in topic or "+" in conditions_topic or "#" in conditions_topic:
         LOGGER.error("MQTT publish topics cannot contain '+' or '#' wildcards")
         return 2
     connection_result = threading.Event()
     connection_failed = threading.Event()
+    condition_lock = threading.Lock()
+    condition_status = "unknown"
+    catch_rate_multiplier = 1.0
 
     def on_connect(
         _client: mqtt.Client,
@@ -111,7 +128,32 @@ def main() -> int:
             LOGGER.error("Broker rejected the connection: %s", reason_code)
         else:
             connection_result.set()
+            subscription = _client.subscribe(conditions_topic, qos=1)
+            if subscription[0] != mqtt.MQTT_ERR_SUCCESS:
+                connection_failed.set()
+                LOGGER.error("Could not subscribe to conditions topic %s: %s", conditions_topic, mqtt.error_string(subscription[0]))
+            else:
+                LOGGER.info("Subscribed to conditions topic %s", conditions_topic)
             LOGGER.info("Connected to MQTT broker at %s:%d", args.host, args.port)
+
+    def on_message(
+        _client: mqtt.Client,
+        _userdata: object,
+        message: mqtt.MQTTMessage,
+    ) -> None:
+        nonlocal condition_status, catch_rate_multiplier
+        try:
+            data = json.loads(message.payload.decode("utf-8"))
+            status = str(data.get("status", "unknown")).lower()
+            multiplier = float(data.get("catchRateMultiplier", 1.0))
+            if status not in {"favorable", "caution", "poor"} or not math.isfinite(multiplier) or multiplier <= 0:
+                raise ValueError("invalid recommendation")
+            with condition_lock:
+                condition_status = status
+                catch_rate_multiplier = max(0.05, min(multiplier, 3.0))
+            LOGGER.info("Updated fishing conditions: %s (catch multiplier %.2f)", status, catch_rate_multiplier)
+        except (UnicodeDecodeError, json.JSONDecodeError, TypeError, ValueError) as exc:
+            LOGGER.warning("Ignoring invalid conditions message on %s: %s", message.topic, exc)
 
     client = mqtt.Client(
         callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
@@ -119,6 +161,7 @@ def main() -> int:
         protocol=mqtt.MQTTv311,
     )
     client.on_connect = on_connect
+    client.on_message = on_message
 
     try:
         client.connect(args.host, args.port, keepalive=60)
@@ -141,9 +184,15 @@ def main() -> int:
             signal.signal(signal.SIGTERM, request_stop)
 
         while not stopping.is_set() and (args.count == 0 or sequence < args.count):
-            if random.random() < 0.08:
+            with condition_lock:
+                active_status = condition_status
+                active_multiplier = catch_rate_multiplier
+            # Model catches as a Poisson arrival process: 0.6 expected catches/minute
+            # under neutral conditions, adjusted by the recommendation multiplier.
+            catch_probability = 1.0 - math.exp(-(0.6 * args.interval / 60.0) * active_multiplier)
+            if random.random() < catch_probability:
                 catch_count += 1
-            payload = make_payload(args.device_id, sequence, catch_count)
+            payload = make_payload(args.device_id, sequence, catch_count, active_status, active_multiplier)
             info = client.publish(topic, json.dumps(payload), qos=1, retain=False)
             if info.rc != mqtt.MQTT_ERR_SUCCESS:
                 LOGGER.error("Publish failed for %s: %s", topic, mqtt.error_string(info.rc))

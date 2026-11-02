@@ -36,9 +36,11 @@ This checklist tracks repository state. A task is complete only when implementat
 - [x] 4.4 Connect normalized marine data to the Water Conditions and Overview dashboard widgets; verify the live marine values.
 - [x] 4.5 Connect normalized MQTT telemetry to the Water Conditions and Overview dashboard widgets; verify live simulator values.
 - [x] 4.6 Display combined weather, marine, and telemetry summary values on the Overview dashboard.
-- [x] 4.7 Add a selectable dashboard update interval (15 seconds, 30 seconds, 1 minute, 5 minutes, or 15 minutes) and apply it to API refreshes and dashboard telemetry updates.
+- [x] 4.7 Add separate selectable API polling and sensor display intervals; API options are 15 seconds, 30 seconds, 1 minute, 5 minutes, or 15 minutes, while sensor display defaults to every simulator message and can be slowed independently.
 - [ ] 4.8 Show API failures, missing values, and stale-data state in the UI.
 - [ ] 4.9 Display and verify cached seven-day weather and marine history metrics in dashboard charts.
+- [x] 4.10 Build the backend fishing-conditions recommendation flow and publish a condition status, score, reasons, and catch-rate multiplier over MQTT.
+- [ ] 4.11 Add the fishing-conditions recommendation and explanation to the dashboard.
 
 ## Phase 5: Packaging and release checks
 
