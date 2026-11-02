@@ -5,8 +5,8 @@ Smart Fishing is an IND4 assignment project built with Node-RED. It polls Open-M
 ## Current status
 
 - Weather and marine API flows run on startup and at the interval selected on the Overview dashboard (15 seconds, 30 seconds, 1 minute, 5 minutes, or 15 minutes; default 1 minute).
-- The same selection throttles how often incoming MQTT sensor readings are sent to dashboard widgets. The Python simulator must still be running; it publishes every 5 seconds by default.
-- A separate Python service maintains a local seven-day cache of weather and marine daily summaries in `cache/history-7d.json`. It fetches only dates and sources missing from the cache and trims dates outside the seven completed UTC-day window.
+- The same selection throttles how often incoming MQTT sensor readings are sent to dashboard widgets. Compose starts the Python simulator automatically; it publishes every 5 seconds by default.
+- A separate Python service maintains a local seven-day cache of weather and marine daily summaries in `cache/history-7d.json`. It fetches only dates and sources missing from the cache, trims dates outside the seven completed UTC-day window, and serves the cached metrics to dashboard history charts.
 - Weather output contains air temperature, wind speed, and up to five daily rainfall forecast values.
 - Marine output contains the nearest hourly sea-surface temperature, sea-level height relative to mean sea level, and wave height values available from the response.
 - API, HTTP, and validation failures are formatted into error messages and sent to the Debug sidebar.
@@ -40,6 +40,7 @@ Smart Fishing is an IND4 assignment project built with Node-RED. It polls Open-M
 │   ├── implementation_plan.md
 │   └── chatgpt_codex_directives.md
 └── scripts/
+    ├── Dockerfile.simulator
     ├── history-cache.py
     ├── simulate-mqtt.py
     └── requirements.txt
@@ -54,7 +55,7 @@ Node-RED's generated runtime configuration, credentials, and installed modules a
 - A working outbound HTTPS connection from the history-cache container to Open-Meteo; the service uses Python 3.13's standard library and no additional Python packages.
 - The Compose file pins `nodered/node-red:5.0.9`, matching the runtime used to verify the current flow.
 - The MQTT service uses the official Eclipse Mosquitto image `2.1.2-alpine`.
-- The telemetry publisher requires Python 3.10+ and the pinned `paho-mqtt` dependency in `scripts/requirements.txt`.
+- Compose builds the telemetry simulator with Python 3.13 and the pinned `paho-mqtt` dependency in `scripts/requirements.txt`; no host Python install is needed for the launcher.
 - FlowFuse Dashboard `1.34.1` is pinned in `node-red/package.json`; it supports Node-RED `3.0+`, including this project’s `5.0.9` runtime.
 
 No Open-Meteo API key is required for the configured forecast endpoints. Use coordinates appropriate to your forecast area; marine forecasts are model data and may not be available at every coordinate.
@@ -74,14 +75,14 @@ No Open-Meteo API key is required for the configured forecast endpoints. Use coo
 3. Start Node-RED:
 
    ```sh
-   docker compose up -d
+   docker compose up -d --build
    ```
 
-   On Windows with Docker running in WSL, double-click `start-smart-fishing.bat` to start the Compose services, keep the WSL Docker engine alive while the launcher is open, wait for the dashboard, and open the Node-RED editor and Overview dashboard in your default browser. Press `q` in the launcher terminal to stop the project containers and close it after the WSL keepalive exits.
+   On Windows with Docker running in WSL, double-click `start-smart-fishing.bat` to build/start the Compose services, including the MQTT simulator, keep the WSL Docker engine alive while the launcher is open, wait for the dashboard, and open the Node-RED editor and Overview dashboard in your default browser. Press `q` in the launcher terminal to stop the project containers and close it after the WSL keepalive exits.
 
-4. Open the Node-RED editor at `http://localhost:<PORT>` (default `http://localhost:1880`) to inspect flows and Debug output. Open the dashboard at `http://localhost:<PORT>/dashboard/overview`; use **Update frequency** to set weather/marine polling and the sensor display cadence (default 1 minute). Forecast values may remain unchanged when the underlying model has not updated. The 15-second setting makes two forecast requests every 15 seconds (11,520/day if left on continuously); use it only briefly because Open-Meteo's free limit is 10,000 calls per day. MQTT sensor gauges and trend charts also require the simulator to be running; see below.
+4. Open the Node-RED editor at `http://localhost:<PORT>` (default `http://localhost:1880`) to inspect flows and Debug output. Open the dashboard at `http://localhost:<PORT>/dashboard/overview`; use **Update frequency** to set weather/marine polling and the sensor display cadence (default 1 minute). Forecast values may remain unchanged when the underlying model has not updated. The 15-second setting makes two forecast requests every 15 seconds (11,520/day if left on continuously); use it only briefly because Open-Meteo's free limit is 10,000 calls per day. The Compose simulator supplies MQTT sensor readings automatically; check `docker compose logs --tail=50 telemetry-simulator` if they do not appear.
 
-The `history-cache` Compose service populates `cache/history-7d.json` when a weather or marine date is missing, then checks hourly for newly available dates. It stores seven completed UTC calendar days. Cache files are local runtime data and are ignored by Git. The history is model forecast output, not observations from physical harbor instruments; no dashboard UI uses this cache yet.
+The `history-cache` Compose service populates `cache/history-7d.json` when a weather or marine date is missing, then checks hourly for newly available dates. Node-RED reads the cache over the Compose-only `history-cache:8080/history` endpoint and refreshes the dashboard history charts every minute. Environment shows daily mean air temperature, maximum wind, and rainfall; Water Conditions shows daily mean sea-surface temperature, sea level, and wave height. The charts cover the seven completed UTC calendar days and display model output, not observations from physical harbor instruments. Cache files remain local runtime data and are ignored by Git.
 
 5. Stop the container while retaining its runtime data:
 
@@ -109,14 +110,15 @@ The service is bound to `127.0.0.1` by default. It is intended for local develop
 | `MQTT_BROKER_HOST` | `mosquitto` | Compose service hostname for clients in the Compose network. |
 | `MQTT_BROKER_PORT` | `1883` | Mosquitto listener port for Compose-network clients. |
 | `MQTT_TOPIC_PREFIX` | `smartfishing` | Root topic for simulated telemetry. |
+| `MQTT_DEVICE_ID` | `demo-01` | Device identifier used by the Compose telemetry simulator. |
 
 The broker currently allows anonymous MQTT connections for local assignment development. Its host port is bound to `127.0.0.1`; do not expose it publicly or reuse this authentication setting in a production deployment.
 
 ## MQTT telemetry simulator
 
-The Phase 3.2 Python publisher sends synthetic data to `<MQTT_TOPIC_PREFIX>/<MQTT_DEVICE_ID>/telemetry` (defaults: `smartfishing/demo-01/telemetry`) at QoS 1 without retaining messages. The JSON payload includes a UTC timestamp, water temperature, water level, cumulative simulated catch count, and battery voltage. Generated values are for development only.
+The Phase 3.2 Python publisher runs as the `telemetry-simulator` Compose service and sends synthetic data to `<MQTT_TOPIC_PREFIX>/<MQTT_DEVICE_ID>/telemetry` (defaults: `smartfishing/demo-01/telemetry`) at QoS 1 without retaining messages. It connects to Mosquitto by the Compose hostname `mosquitto` and publishes every five seconds. The JSON payload includes a UTC timestamp, water temperature, water level, cumulative simulated catch count, and battery voltage. Generated values are for development only.
 
-After starting the Compose broker, create a virtual environment, install the pinned dependency, and run ten messages from the repository root.
+For a one-off manual publisher test, create a virtual environment, install the pinned dependency, and run ten messages from the repository root. Normal launcher use runs this publisher inside the Compose stack automatically.
 
 On macOS/Linux:
 

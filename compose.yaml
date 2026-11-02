@@ -20,6 +20,7 @@ services:
       MQTT_TELEMETRY_TOPIC: ${MQTT_TOPIC_PREFIX:-smartfishing}/+/telemetry
     depends_on:
       - mosquitto
+      - history-cache
     volumes:
       - ./node-red:/data
       - ./flows:/data/flows
@@ -35,10 +36,26 @@ services:
       WEATHER_API_URL: ${WEATHER_API_URL:-https://api.open-meteo.com/v1/forecast}
       MARINE_API_URL: ${MARINE_API_URL:-https://marine-api.open-meteo.com/v1/marine}
       HISTORY_CACHE_INTERVAL_SECONDS: ${HISTORY_CACHE_INTERVAL_SECONDS:-3600}
+      HISTORY_CACHE_HTTP_PORT: 8080
     command: ["python", "/app/history-cache.py"]
+    expose:
+      - "8080"
     volumes:
       - ./scripts/history-cache.py:/app/history-cache.py:ro
       - ./cache:/cache
+
+  telemetry-simulator:
+    build:
+      context: ./scripts
+      dockerfile: Dockerfile.simulator
+    restart: unless-stopped
+    environment:
+      MQTT_PUBLISHER_HOST: mosquitto
+      MQTT_PUBLISHER_PORT: 1883
+      MQTT_TOPIC_PREFIX: ${MQTT_TOPIC_PREFIX:-smartfishing}
+      MQTT_DEVICE_ID: ${MQTT_DEVICE_ID:-demo-01}
+    depends_on:
+      - mosquitto
 
   mosquitto:
     image: eclipse-mosquitto:2.1.2-alpine

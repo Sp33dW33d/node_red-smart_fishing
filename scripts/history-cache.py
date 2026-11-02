@@ -8,7 +8,9 @@ import math
 import os
 import time
 from datetime import date, datetime, timedelta, timezone
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from threading import Thread
 from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
@@ -20,6 +22,42 @@ CACHE_PATH = Path(os.getenv("HISTORY_CACHE_PATH", "/cache/history-7d.json"))
 WINDOW_DAYS = 7
 TIMEZONE = "UTC"
 USER_AGENT = "smart-fishing-history-cache/1.0"
+HTTP_PORT = int(os.getenv("HISTORY_CACHE_HTTP_PORT", "8080"))
+
+
+class CacheRequestHandler(BaseHTTPRequestHandler):
+    def do_GET(self) -> None:
+        if self.path == "/healthz":
+            self.respond(200, {"status": "ok"})
+            return
+        if self.path != "/history":
+            self.respond(404, {"error": "not found"})
+            return
+        try:
+            cache = json.loads(CACHE_PATH.read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            self.respond(503, {"error": "history cache has not been created yet"})
+            return
+        except (OSError, json.JSONDecodeError) as exc:
+            LOGGER.warning("Cannot serve history cache: %s", exc)
+            self.respond(503, {"error": "history cache is temporarily unavailable"})
+            return
+        if not isinstance(cache, dict) or cache.get("schemaVersion") != 1 or not isinstance(cache.get("days"), list):
+            self.respond(503, {"error": "history cache has an unsupported format"})
+            return
+        self.respond(200, cache)
+
+    def respond(self, status: int, payload: dict[str, Any]) -> None:
+        body = json.dumps(payload, ensure_ascii=False, allow_nan=False).encode("utf-8")
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.send_header("Cache-Control", "no-store")
+        self.end_headers()
+        self.wfile.write(body)
+
+    def log_message(self, format_string: str, *args: Any) -> None:
+        LOGGER.info("History API %s", format_string % args)
 
 
 def api_url(base: str, params: dict[str, str]) -> str:
@@ -226,9 +264,11 @@ def marine_records(start: date, end: date, location: dict[str, Any]) -> dict[str
 
 def save_cache(cache: dict[str, Any]) -> None:
     CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with CACHE_PATH.open("w", encoding="utf-8", newline="\n") as output:
+    temporary_path = CACHE_PATH.with_suffix(CACHE_PATH.suffix + ".tmp")
+    with temporary_path.open("w", encoding="utf-8", newline="\n") as output:
         json.dump(cache, output, indent=2, ensure_ascii=False, allow_nan=False)
         output.write("\n")
+    temporary_path.replace(CACHE_PATH)
 
 
 def refresh_cache() -> None:
@@ -308,6 +348,9 @@ def main() -> int:
         LOGGER.error("HISTORY_CACHE_INTERVAL_SECONDS must be an integer")
         return 2
     LOGGER.info("Starting seven-day history cache; refresh check every %d seconds", interval)
+    server = ThreadingHTTPServer(("0.0.0.0", HTTP_PORT), CacheRequestHandler)
+    Thread(target=server.serve_forever, name="history-cache-http", daemon=True).start()
+    LOGGER.info("History cache API listening on port %d", HTTP_PORT)
     while True:
         try:
             refresh_cache()

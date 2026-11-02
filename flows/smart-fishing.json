@@ -7,6 +7,351 @@
     "info": "Scheduled weather and marine forecast ingestion. API responses are validated and normalized before downstream use."
   },
   {
+    "id": "b400000000000001",
+    "type": "tab",
+    "label": "Dashboard Interface",
+    "disabled": false,
+    "info": "FlowFuse Dashboard 2 pages for current API values, simulated MQTT telemetry, and cached seven-day weather and marine history."
+  },
+  {
+    "id": "a100000000000013",
+    "type": "mqtt-broker",
+    "name": "Local Mosquitto",
+    "broker": "${MQTT_BROKER_HOST}",
+    "port": "${MQTT_BROKER_PORT}",
+    "clientid": "",
+    "autoConnect": true,
+    "usetls": false,
+    "protocolVersion": "4",
+    "keepalive": "60",
+    "cleansession": true,
+    "autoUnsubscribe": true,
+    "birthTopic": "",
+    "birthQos": "0",
+    "birthPayload": "",
+    "closeTopic": "",
+    "closeQos": "0",
+    "closePayload": "",
+    "willTopic": "",
+    "willQos": "0",
+    "willPayload": ""
+  },
+  {
+    "id": "b400000000000002",
+    "type": "ui-base",
+    "name": "Smart Fishing Dashboard",
+    "path": "/dashboard",
+    "appIcon": "",
+    "includeClientData": true,
+    "acceptsClientConfig": [
+      "ui-notification",
+      "ui-control"
+    ],
+    "showPathInSidebar": false,
+    "headerContent": "page",
+    "navigationStyle": "default",
+    "titleBarStyle": "default",
+    "showReconnectNotification": true,
+    "notificationDisplayTime": 3,
+    "showDisconnectNotification": true,
+    "allowInstall": false
+  },
+  {
+    "id": "b400000000000003",
+    "type": "ui-theme",
+    "name": "Smart Fishing Theme",
+    "colors": {
+      "surface": "#ffffff",
+      "primary": "#087e8b",
+      "bgPage": "#f3f7f8",
+      "groupBg": "#ffffff",
+      "groupOutline": "#d8e3e6"
+    },
+    "sizes": {
+      "density": "default",
+      "pagePadding": "16px",
+      "groupGap": "16px",
+      "groupBorderRadius": "8px",
+      "widgetGap": "12px"
+    }
+  },
+  {
+    "id": "b400000000000004",
+    "type": "ui-page",
+    "name": "Overview",
+    "ui": "b400000000000002",
+    "path": "/overview",
+    "icon": "view-dashboard",
+    "layout": "grid",
+    "theme": "b400000000000003",
+    "breakpoints": [
+      {
+        "name": "Default",
+        "px": 0,
+        "cols": 3
+      },
+      {
+        "name": "Tablet",
+        "px": 576,
+        "cols": 6
+      },
+      {
+        "name": "Small Desktop",
+        "px": 768,
+        "cols": 9
+      },
+      {
+        "name": "Desktop",
+        "px": 1024,
+        "cols": 12
+      }
+    ],
+    "tabs": [],
+    "order": 1,
+    "className": "",
+    "visible": "true",
+    "disabled": "false"
+  },
+  {
+    "id": "b400000000000005",
+    "type": "ui-group",
+    "name": "At-a-glance readings",
+    "page": "b400000000000004",
+    "width": 12,
+    "height": 1,
+    "order": 3,
+    "showTitle": false,
+    "className": "",
+    "visible": true,
+    "disabled": false,
+    "groupType": "default",
+    "tab": ""
+  },
+  {
+    "id": "b600000000000001",
+    "type": "ui-group",
+    "name": "Overview introduction",
+    "page": "b400000000000004",
+    "width": 12,
+    "height": 1,
+    "order": 1,
+    "showTitle": false,
+    "className": "",
+    "visible": true,
+    "disabled": false,
+    "groupType": "default",
+    "tab": ""
+  },
+  {
+    "id": "b400000000000007",
+    "type": "ui-page",
+    "name": "Environment",
+    "ui": "b400000000000002",
+    "path": "/environment",
+    "icon": "weather-partly-cloudy",
+    "layout": "grid",
+    "theme": "b400000000000003",
+    "breakpoints": [
+      {
+        "name": "Default",
+        "px": 0,
+        "cols": 3
+      },
+      {
+        "name": "Tablet",
+        "px": 576,
+        "cols": 6
+      },
+      {
+        "name": "Small Desktop",
+        "px": 768,
+        "cols": 9
+      },
+      {
+        "name": "Desktop",
+        "px": 1024,
+        "cols": 12
+      }
+    ],
+    "tabs": [],
+    "order": 2,
+    "className": "",
+    "visible": "true",
+    "disabled": "false"
+  },
+  {
+    "id": "b400000000000008",
+    "type": "ui-group",
+    "name": "Weather conditions",
+    "page": "b400000000000007",
+    "width": 12,
+    "height": 1,
+    "order": 2,
+    "showTitle": true,
+    "className": "",
+    "visible": true,
+    "disabled": false,
+    "groupType": "default",
+    "tab": ""
+  },
+  {
+    "id": "b600000000000005",
+    "type": "ui-group",
+    "name": "Weather forecast introduction",
+    "page": "b400000000000007",
+    "width": 12,
+    "height": 1,
+    "order": 1,
+    "showTitle": false,
+    "className": "",
+    "visible": true,
+    "disabled": false,
+    "groupType": "default",
+    "tab": ""
+  },
+  {
+    "id": "b40000000000000a",
+    "type": "ui-page",
+    "name": "Water Conditions",
+    "ui": "b400000000000002",
+    "path": "/water-conditions",
+    "icon": "waves",
+    "layout": "grid",
+    "theme": "b400000000000003",
+    "breakpoints": [
+      {
+        "name": "Default",
+        "px": 0,
+        "cols": 3
+      },
+      {
+        "name": "Tablet",
+        "px": 576,
+        "cols": 6
+      },
+      {
+        "name": "Small Desktop",
+        "px": 768,
+        "cols": 9
+      },
+      {
+        "name": "Desktop",
+        "px": 1024,
+        "cols": 12
+      }
+    ],
+    "tabs": [],
+    "order": 3,
+    "className": "",
+    "visible": "true",
+    "disabled": "false"
+  },
+  {
+    "id": "b40000000000000b",
+    "type": "ui-group",
+    "name": "Marine forecast",
+    "page": "b40000000000000a",
+    "width": 12,
+    "height": 1,
+    "order": 2,
+    "showTitle": true,
+    "className": "",
+    "visible": true,
+    "disabled": false,
+    "groupType": "default",
+    "tab": ""
+  },
+  {
+    "id": "b50000000000000a",
+    "type": "ui-group",
+    "name": "Sensor telemetry readings",
+    "page": "b40000000000000a",
+    "width": 12,
+    "height": 1,
+    "order": 3,
+    "showTitle": true,
+    "className": "",
+    "visible": "true",
+    "disabled": "false",
+    "groupType": "default",
+    "tab": ""
+  },
+  {
+    "id": "b600000000000003",
+    "type": "ui-group",
+    "name": "Water conditions introduction",
+    "page": "b40000000000000a",
+    "width": 12,
+    "height": 1,
+    "order": 1,
+    "showTitle": false,
+    "className": "",
+    "visible": true,
+    "disabled": false,
+    "groupType": "default",
+    "tab": ""
+  },
+  {
+    "id": "b600000000000004",
+    "type": "ui-group",
+    "name": "Sensor trends",
+    "page": "b40000000000000a",
+    "width": 12,
+    "height": 1,
+    "order": 4,
+    "showTitle": true,
+    "className": "",
+    "visible": true,
+    "disabled": false,
+    "groupType": "default",
+    "tab": ""
+  },
+  {
+    "id": "c100000000000005",
+    "type": "ui-group",
+    "name": "Update frequency",
+    "page": "b400000000000004",
+    "width": 12,
+    "height": 1,
+    "order": 2,
+    "showTitle": true,
+    "className": "",
+    "visible": true,
+    "disabled": false,
+    "groupType": "default",
+    "tab": ""
+  },
+  {
+    "id": "d700000000000004",
+    "type": "ui-group",
+    "name": "Seven-day weather history",
+    "page": "b400000000000007",
+    "width": 12,
+    "height": 1,
+    "order": 3,
+    "showTitle": true,
+    "className": "",
+    "visible": true,
+    "disabled": false,
+    "groupType": "default",
+    "tab": ""
+  },
+  {
+    "id": "d700000000000005",
+    "type": "ui-group",
+    "name": "Seven-day marine history",
+    "page": "b40000000000000a",
+    "width": 12,
+    "height": 1,
+    "order": 5,
+    "showTitle": true,
+    "className": "",
+    "visible": true,
+    "disabled": false,
+    "groupType": "default",
+    "tab": ""
+  },
+  {
     "id": "a100000000000002",
     "type": "comment",
     "z": "a100000000000001",
@@ -324,29 +669,6 @@
     "wires": []
   },
   {
-    "id": "a100000000000013",
-    "type": "mqtt-broker",
-    "name": "Local Mosquitto",
-    "broker": "${MQTT_BROKER_HOST}",
-    "port": "${MQTT_BROKER_PORT}",
-    "clientid": "",
-    "autoConnect": true,
-    "usetls": false,
-    "protocolVersion": "4",
-    "keepalive": "60",
-    "cleansession": true,
-    "autoUnsubscribe": true,
-    "birthTopic": "",
-    "birthQos": "0",
-    "birthPayload": "",
-    "closeTopic": "",
-    "closeQos": "0",
-    "closePayload": "",
-    "willTopic": "",
-    "willQos": "0",
-    "willPayload": ""
-  },
-  {
     "id": "a100000000000014",
     "type": "mqtt in",
     "z": "a100000000000001",
@@ -444,304 +766,6 @@
     ]
   },
   {
-    "id": "b400000000000001",
-    "type": "tab",
-    "label": "Dashboard Interface",
-    "disabled": false,
-    "info": "FlowFuse Dashboard 2 pages and introductory widgets. Phase 4.3 will connect normalized weather, marine, and MQTT values."
-  },
-  {
-    "id": "b400000000000002",
-    "type": "ui-base",
-    "name": "Smart Fishing Dashboard",
-    "path": "/dashboard",
-    "appIcon": "",
-    "includeClientData": true,
-    "acceptsClientConfig": [
-      "ui-notification",
-      "ui-control"
-    ],
-    "showPathInSidebar": false,
-    "headerContent": "page",
-    "navigationStyle": "default",
-    "titleBarStyle": "default",
-    "showReconnectNotification": true,
-    "notificationDisplayTime": 3,
-    "showDisconnectNotification": true,
-    "allowInstall": false
-  },
-  {
-    "id": "b400000000000003",
-    "type": "ui-theme",
-    "name": "Smart Fishing Theme",
-    "colors": {
-      "surface": "#ffffff",
-      "primary": "#087e8b",
-      "bgPage": "#f3f7f8",
-      "groupBg": "#ffffff",
-      "groupOutline": "#d8e3e6"
-    },
-    "sizes": {
-      "density": "default",
-      "pagePadding": "16px",
-      "groupGap": "16px",
-      "groupBorderRadius": "8px",
-      "widgetGap": "12px"
-    }
-  },
-  {
-    "id": "b400000000000004",
-    "type": "ui-page",
-    "name": "Overview",
-    "ui": "b400000000000002",
-    "path": "/overview",
-    "icon": "view-dashboard",
-    "layout": "grid",
-    "theme": "b400000000000003",
-    "breakpoints": [
-      {
-        "name": "Default",
-        "px": 0,
-        "cols": 3
-      },
-      {
-        "name": "Tablet",
-        "px": 576,
-        "cols": 6
-      },
-      {
-        "name": "Small Desktop",
-        "px": 768,
-        "cols": 9
-      },
-      {
-        "name": "Desktop",
-        "px": 1024,
-        "cols": 12
-      }
-    ],
-    "tabs": [],
-    "order": 0,
-    "className": "",
-    "visible": "true",
-    "disabled": "false"
-  },
-  {
-    "id": "b400000000000005",
-    "type": "ui-group",
-    "name": "At-a-glance readings",
-    "page": "b400000000000004",
-    "width": 12,
-    "height": 1,
-    "order": 1,
-    "showTitle": false,
-    "className": "",
-    "visible": true,
-    "disabled": false,
-    "groupType": "default",
-    "tab": ""
-  },
-  {
-    "id": "b600000000000001",
-    "type": "ui-group",
-    "name": "Overview introduction",
-    "page": "b400000000000004",
-    "width": 12,
-    "height": 1,
-    "order": 0.5,
-    "showTitle": false,
-    "className": "",
-    "visible": true,
-    "disabled": false,
-    "groupType": "default",
-    "tab": ""
-  },
-  {
-    "id": "b400000000000006",
-    "type": "ui-markdown",
-    "z": "b400000000000001",
-    "group": "b600000000000001",
-    "name": "Getting started",
-    "order": 0.5,
-    "width": 12,
-    "height": 3,
-    "content": "## Smart Fishing Monitor\n\nLive weather forecasts and simulated sensor readings for **Sassoon Dock, Mumbai** (18.9110, 72.8253). Forecast data is model output; MQTT sensor values are generated by the local simulator.\n\nLocation details are read from `LOCATION_NAME`, `LOCATION_LATITUDE`, and `LOCATION_LONGITUDE` in Compose and passed through the [weather normalization flow](/#flow/a100000000000001).",
-    "className": "",
-    "x": 300,
-    "y": 100,
-    "wires": [
-      []
-    ]
-  },
-  {
-    "id": "b400000000000007",
-    "type": "ui-page",
-    "name": "Environment",
-    "ui": "b400000000000002",
-    "path": "/environment",
-    "icon": "weather-partly-cloudy",
-    "layout": "grid",
-    "theme": "b400000000000003",
-    "breakpoints": [
-      {
-        "name": "Default",
-        "px": 0,
-        "cols": 3
-      },
-      {
-        "name": "Tablet",
-        "px": 576,
-        "cols": 6
-      },
-      {
-        "name": "Small Desktop",
-        "px": 768,
-        "cols": 9
-      },
-      {
-        "name": "Desktop",
-        "px": 1024,
-        "cols": 12
-      }
-    ],
-    "tabs": [],
-    "order": 1,
-    "className": "",
-    "visible": "true",
-    "disabled": "false"
-  },
-  {
-    "id": "b400000000000008",
-    "type": "ui-group",
-    "name": "Weather conditions",
-    "page": "b400000000000007",
-    "width": 12,
-    "height": 1,
-    "order": 1,
-    "showTitle": true,
-    "className": "",
-    "visible": true,
-    "disabled": false,
-    "groupType": "default",
-    "tab": ""
-  },
-  {
-    "id": "b600000000000005",
-    "type": "ui-group",
-    "name": "Weather forecast introduction",
-    "page": "b400000000000007",
-    "width": 12,
-    "height": 1,
-    "order": 0.5,
-    "showTitle": false,
-    "className": "",
-    "visible": true,
-    "disabled": false,
-    "groupType": "default",
-    "tab": ""
-  },
-  {
-    "id": "b400000000000009",
-    "type": "ui-markdown",
-    "z": "b400000000000001",
-    "group": "b600000000000005",
-    "name": "Weather data",
-    "order": 0.5,
-    "width": 12,
-    "height": 3,
-    "content": "## Weather forecast\n\nCurrent air temperature and wind speed are refreshed with the forecast. The rainfall chart shows the latest five-day forecast from Open-Meteo.",
-    "className": "",
-    "x": 300,
-    "y": 200,
-    "wires": [
-      []
-    ]
-  },
-  {
-    "id": "b40000000000000a",
-    "type": "ui-page",
-    "name": "Water Conditions",
-    "ui": "b400000000000002",
-    "path": "/water-conditions",
-    "icon": "waves",
-    "layout": "grid",
-    "theme": "b400000000000003",
-    "breakpoints": [
-      {
-        "name": "Default",
-        "px": 0,
-        "cols": 3
-      },
-      {
-        "name": "Tablet",
-        "px": 576,
-        "cols": 6
-      },
-      {
-        "name": "Small Desktop",
-        "px": 768,
-        "cols": 9
-      },
-      {
-        "name": "Desktop",
-        "px": 1024,
-        "cols": 12
-      }
-    ],
-    "tabs": [],
-    "order": 2,
-    "className": "",
-    "visible": "true",
-    "disabled": "false"
-  },
-  {
-    "id": "b40000000000000b",
-    "type": "ui-group",
-    "name": "Marine forecast",
-    "page": "b40000000000000a",
-    "width": 12,
-    "height": 1,
-    "order": 1,
-    "showTitle": true,
-    "className": "",
-    "visible": true,
-    "disabled": false,
-    "groupType": "default",
-    "tab": ""
-  },
-  {
-    "id": "b50000000000000a",
-    "type": "ui-group",
-    "name": "Sensor telemetry readings",
-    "page": "b40000000000000a",
-    "width": 12,
-    "height": 1,
-    "order": 2,
-    "showTitle": true,
-    "className": "",
-    "visible": true,
-    "disabled": false,
-    "groupType": "default",
-    "tab": ""
-  },
-  {
-    "id": "b40000000000000c",
-    "type": "ui-markdown",
-    "z": "b400000000000001",
-    "group": "b600000000000003",
-    "name": "Marine and sensor data",
-    "order": 0.5,
-    "width": 12,
-    "height": 3,
-    "content": "## Marine forecast and simulated telemetry\n\nMarine readings are model forecasts from Open-Meteo. Sensor readings are synthetic MQTT samples from the local simulator, not physical harbor instruments.",
-    "className": "",
-    "x": 300,
-    "y": 300,
-    "wires": [
-      []
-    ]
-  },
-  {
     "id": "b500000000000001",
     "type": "link out",
     "z": "a100000000000001",
@@ -779,6 +803,94 @@
     "x": 1390,
     "y": 600,
     "wires": []
+  },
+  {
+    "id": "c100000000000004",
+    "type": "link in",
+    "z": "a100000000000001",
+    "name": "Dashboard-selected refresh interval",
+    "links": [
+      "c100000000000003"
+    ],
+    "x": 180,
+    "y": 100,
+    "wires": [
+      [
+        "a100000000000004",
+        "a10000000000000a"
+      ]
+    ]
+  },
+  {
+    "id": "c100000000000007",
+    "type": "function",
+    "z": "a100000000000001",
+    "name": "Throttle sensor dashboard updates",
+    "func": "const intervalMs = Number(global.get('sensorDashboardIntervalMs')) || 0;\nif (intervalMs <= 0) {\n    context.set('lastDashboardUpdate', Date.now());\n    return msg;\n}\nconst now = Date.now();\nconst last = Number(context.get('lastDashboardUpdate')) || 0;\nif (now - last < intervalMs) return null;\ncontext.set('lastDashboardUpdate', now);\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "global.set('sensorDashboardIntervalMs', 0);",
+    "finalize": "",
+    "libs": [],
+    "x": 1320,
+    "y": 560,
+    "wires": [
+      [
+        "b500000000000003"
+      ]
+    ]
+  },
+  {
+    "id": "b400000000000006",
+    "type": "ui-markdown",
+    "z": "b400000000000001",
+    "group": "b600000000000001",
+    "name": "Getting started",
+    "order": 1,
+    "width": 12,
+    "height": 3,
+    "content": "## Smart Fishing Monitor\n\nLive weather forecasts and simulated sensor readings for **Sassoon Dock, Mumbai** (18.9110, 72.8253). Forecast data is model output; MQTT sensor values are generated by the local simulator.\n\nLocation details are read from `LOCATION_NAME`, `LOCATION_LATITUDE`, and `LOCATION_LONGITUDE` in Compose and passed through the [weather normalization flow](/#flow/a100000000000001).",
+    "className": "",
+    "x": 300,
+    "y": 100,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "b400000000000009",
+    "type": "ui-markdown",
+    "z": "b400000000000001",
+    "group": "b600000000000005",
+    "name": "Weather data",
+    "order": 1,
+    "width": 12,
+    "height": 3,
+    "content": "## Weather forecast\n\nCurrent air temperature and wind speed are refreshed with the forecast. The rainfall chart shows the latest five-day forecast from Open-Meteo.",
+    "className": "",
+    "x": 300,
+    "y": 200,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "b40000000000000c",
+    "type": "ui-markdown",
+    "z": "b400000000000001",
+    "group": "b600000000000003",
+    "name": "Marine and sensor data",
+    "order": 1,
+    "width": 12,
+    "height": 3,
+    "content": "## Marine forecast and simulated telemetry\n\nMarine readings are model forecasts from Open-Meteo. Sensor readings are synthetic MQTT samples from the local simulator, not physical harbor instruments.",
+    "className": "",
+    "x": 300,
+    "y": 300,
+    "wires": [
+      []
+    ]
   },
   {
     "id": "b500000000000004",
@@ -1112,11 +1224,11 @@
     "id": "b500000000000019",
     "type": "ui-text",
     "z": "b400000000000001",
-    "name": "Five-day rainfall total",
     "group": "b400000000000005",
-    "order": 2,
+    "order": 4,
     "width": 4,
     "height": 1,
+    "name": "Five-day rainfall total",
     "label": "5-day rainfall (mm)",
     "format": "{{msg.payload}}",
     "layout": "row-spread",
@@ -1136,11 +1248,11 @@
     "id": "b500000000000015",
     "type": "ui-text",
     "z": "b400000000000001",
-    "name": "Overview air temperature",
     "group": "b400000000000005",
-    "order": 0.5,
+    "order": 3,
     "width": 4,
     "height": 1,
+    "name": "Overview air temperature",
     "label": "Air temperature (°C)",
     "format": "{{msg.payload}}",
     "layout": "row-spread",
@@ -1160,11 +1272,11 @@
     "id": "b500000000000017",
     "type": "ui-text",
     "z": "b400000000000001",
-    "name": "Overview wind speed",
     "group": "b400000000000005",
-    "order": 1,
+    "order": 2,
     "width": 4,
     "height": 1,
+    "name": "Overview wind speed",
     "label": "Wind speed (km/h)",
     "format": "{{msg.payload}}",
     "layout": "row-spread",
@@ -1186,7 +1298,7 @@
     "z": "b400000000000001",
     "name": "Marine sea temperature gauge",
     "group": "b40000000000000b",
-    "order": 0.5,
+    "order": 1,
     "value": "payload",
     "valueType": "msg",
     "width": 4,
@@ -1252,7 +1364,7 @@
     "z": "b400000000000001",
     "name": "Marine sea level gauge",
     "group": "b40000000000000b",
-    "order": 1,
+    "order": 2,
     "value": "payload",
     "valueType": "msg",
     "width": 4,
@@ -1312,7 +1424,7 @@
     "z": "b400000000000001",
     "name": "Wave height gauge",
     "group": "b40000000000000b",
-    "order": 2,
+    "order": 3,
     "value": "payload",
     "valueType": "msg",
     "width": 4,
@@ -1370,11 +1482,11 @@
     "id": "b50000000000001b",
     "type": "ui-text",
     "z": "b400000000000001",
-    "name": "Overview sea temperature",
     "group": "b400000000000005",
-    "order": 3,
+    "order": 5,
     "width": 4,
     "height": 1,
+    "name": "Overview sea temperature",
     "label": "Sea-surface temperature (°C)",
     "format": "{{msg.payload}}",
     "layout": "row-spread",
@@ -1394,11 +1506,11 @@
     "id": "b50000000000001e",
     "type": "ui-text",
     "z": "b400000000000001",
-    "name": "Overview wave height",
     "group": "b400000000000005",
-    "order": 4,
+    "order": 6,
     "width": 4,
     "height": 1,
+    "name": "Overview wave height",
     "label": "Wave height (m)",
     "format": "{{msg.payload}}",
     "layout": "row-spread",
@@ -1420,10 +1532,10 @@
     "z": "b400000000000001",
     "name": "Sensor water temperature gauge",
     "group": "b50000000000000a",
-    "order": 0.5,
+    "order": 1,
     "value": "payload",
     "valueType": "msg",
-    "width": 3,
+    "width": "4",
     "height": 3,
     "gtype": "gauge-half",
     "gstyle": "rounded",
@@ -1436,26 +1548,26 @@
     "suffix": "",
     "segments": [
       {
+        "from": "0",
         "color": "#3b82f6",
-        "from": 0,
         "text": "",
         "textType": "label"
       },
       {
+        "from": "15",
         "color": "#22c55e",
-        "from": 15,
         "text": "",
         "textType": "label"
       },
       {
+        "from": "29",
         "color": "#facc15",
-        "from": 29,
         "text": "",
         "textType": "label"
       },
       {
+        "from": "36",
         "color": "#ef4444",
-        "from": 36,
         "text": "",
         "textType": "label"
       }
@@ -1481,7 +1593,7 @@
     "group": "b600000000000004",
     "name": "Sensor water temperature chart",
     "label": "Sensor water temperature (last hour)",
-    "order": 0.5,
+    "order": 1,
     "chartType": "line",
     "category": "topic",
     "categoryType": "msg",
@@ -1535,10 +1647,10 @@
     "z": "b400000000000001",
     "name": "Sensor water level gauge",
     "group": "b50000000000000a",
-    "order": 1,
+    "order": 2,
     "value": "payload",
     "valueType": "msg",
-    "width": 3,
+    "width": "4",
     "height": 3,
     "gtype": "gauge-half",
     "gstyle": "rounded",
@@ -1551,26 +1663,26 @@
     "suffix": "",
     "segments": [
       {
+        "from": "0",
         "color": "#3b82f6",
-        "from": 0,
         "text": "",
         "textType": "label"
       },
       {
+        "from": "0.8",
         "color": "#22c55e",
-        "from": 0.8,
         "text": "",
         "textType": "label"
       },
       {
+        "from": "1.8",
         "color": "#facc15",
-        "from": 1.8,
         "text": "",
         "textType": "label"
       },
       {
+        "from": "2.5",
         "color": "#ef4444",
-        "from": 2.5,
         "text": "",
         "textType": "label"
       }
@@ -1596,7 +1708,7 @@
     "group": "b600000000000004",
     "name": "Sensor water level chart",
     "label": "Sensor water level (last hour)",
-    "order": 1.5,
+    "order": 2,
     "chartType": "line",
     "category": "topic",
     "categoryType": "msg",
@@ -1650,10 +1762,10 @@
     "z": "b400000000000001",
     "name": "Sensor battery voltage gauge",
     "group": "b50000000000000a",
-    "order": 2,
+    "order": 3,
     "value": "payload",
     "valueType": "msg",
-    "width": 3,
+    "width": "4",
     "height": 3,
     "gtype": "gauge-half",
     "gstyle": "rounded",
@@ -1666,26 +1778,26 @@
     "suffix": "",
     "segments": [
       {
+        "from": "3",
         "color": "#ef4444",
-        "from": 3,
         "text": "",
         "textType": "label"
       },
       {
+        "from": "3.4",
         "color": "#f59e0b",
-        "from": 3.4,
         "text": "",
         "textType": "label"
       },
       {
+        "from": "3.65",
         "color": "#22c55e",
-        "from": 3.65,
         "text": "",
         "textType": "label"
       },
       {
+        "from": "4",
         "color": "#3b82f6",
-        "from": 4,
         "text": "",
         "textType": "label"
       }
@@ -1708,19 +1820,19 @@
     "id": "b500000000000025",
     "type": "ui-text",
     "z": "b400000000000001",
-    "name": "Sensor catch count",
     "group": "b50000000000000a",
-    "order": 3,
-    "width": 3,
-    "height": 1,
+    "order": 4,
+    "width": "0",
+    "height": "0",
+    "name": "Sensor catch count",
     "label": "Catch count",
     "format": "{{msg.payload}}",
-    "layout": "row-spread",
+    "layout": "col-center",
     "style": true,
-    "font": "Helvetica",
-    "fontSize": 18,
+    "font": "",
+    "fontSize": "20",
     "color": "#087e8b",
-    "wrapText": false,
+    "wrapText": true,
     "className": "",
     "value": "payload",
     "valueType": "msg",
@@ -1732,11 +1844,11 @@
     "id": "b500000000000021",
     "type": "ui-text",
     "z": "b400000000000001",
-    "name": "Overview sensor water temperature",
     "group": "b400000000000005",
-    "order": 5,
+    "order": 7,
     "width": 4,
     "height": 1,
+    "name": "Overview sensor water temperature",
     "label": "Sensor water temperature (°C)",
     "format": "{{msg.payload}}",
     "layout": "row-spread",
@@ -1756,16 +1868,16 @@
     "id": "b500000000000026",
     "type": "ui-text",
     "z": "b400000000000001",
-    "name": "Overview catch count",
     "group": "b400000000000005",
-    "order": 6,
-    "width": 4,
-    "height": 1,
+    "order": 8,
+    "width": "0",
+    "height": "0",
+    "name": "Overview catch count",
     "label": "Simulated catch count",
     "format": "{{msg.payload}}",
-    "layout": "row-spread",
+    "layout": "col-center",
     "style": true,
-    "font": "Helvetica",
+    "font": "",
     "fontSize": 18,
     "color": "#087e8b",
     "wrapText": false,
@@ -1782,7 +1894,7 @@
     "z": "b400000000000001",
     "group": "b400000000000005",
     "name": "At-a-glance heading",
-    "order": 0.25,
+    "order": 1,
     "width": 12,
     "height": 1,
     "content": "### At-a-glance readings",
@@ -1794,64 +1906,19 @@
     ]
   },
   {
-    "id": "b600000000000003",
-    "type": "ui-group",
-    "name": "Water conditions introduction",
-    "page": "b40000000000000a",
-    "width": 12,
-    "height": 1,
-    "order": 0.5,
-    "showTitle": false,
-    "className": "",
-    "visible": true,
-    "disabled": false,
-    "groupType": "default",
-    "tab": ""
-  },
-  {
-    "id": "b600000000000004",
-    "type": "ui-group",
-    "name": "Sensor trends",
-    "page": "b40000000000000a",
-    "width": 12,
-    "height": 1,
-    "order": 3,
-    "showTitle": true,
-    "className": "",
-    "visible": true,
-    "disabled": false,
-    "groupType": "default",
-    "tab": ""
-  },
-  {
-    "id": "c100000000000005",
-    "type": "ui-group",
-    "name": "Update frequency",
-    "page": "b400000000000004",
-    "width": 12,
-    "height": 1,
-    "order": 0.75,
-    "showTitle": true,
-    "className": "",
-    "visible": true,
-    "disabled": false,
-    "groupType": "default",
-    "tab": ""
-  },
-  {
     "id": "c100000000000001",
     "type": "ui-dropdown",
     "z": "b400000000000001",
     "group": "c100000000000005",
-    "name": "Dashboard update frequency",
-    "label": "Update interval",
-    "tooltip": "Controls weather and marine forecast polling and the sensor update cadence shown on the dashboards.",
-    "order": 0.5,
-    "width": 4,
+    "name": "API polling frequency",
+    "label": "API poll interval",
+    "tooltip": "Controls how often Open-Meteo weather and marine requests are made.",
+    "order": 1,
+    "width": 6,
     "height": 1,
     "passthru": false,
     "multiple": false,
-    "chips": false,
+    "chips": true,
     "clearable": false,
     "options": [
       {
@@ -1881,12 +1948,11 @@
       }
     ],
     "payload": 60,
-    "payloadType": "num",
     "topic": "topic",
     "topicType": "msg",
     "className": "",
-    "typeIsComboBox": true,
-    "msgTrigger": "onChange",
+    "typeIsComboBox": false,
+    "msgTrigger": "onClose",
     "x": 270,
     "y": 920,
     "wires": [
@@ -1899,12 +1965,12 @@
     "id": "c100000000000002",
     "type": "function",
     "z": "b400000000000001",
-    "name": "Apply dashboard update frequency",
-    "func": "const allowed = [15, 30, 60, 300, 900];\nconst seconds = Number(msg.payload);\nif (!allowed.includes(seconds)) {\n    node.warn('Ignoring unsupported dashboard update interval: ' + msg.payload);\n    return null;\n}\nconst previous = context.get('refreshTimer');\nif (previous) clearInterval(previous);\nconst intervalMs = seconds * 1000;\nconst timer = setInterval(() => node.send({ topic: 'dashboard/refresh', payload: Date.now() }), intervalMs);\ncontext.set('refreshTimer', timer);\ncontext.set('refreshIntervalSeconds', seconds);\nglobal.set('metricRefreshIntervalMs', intervalMs);\nconst label = seconds < 60 ? seconds + ' seconds' : (seconds % 60 === 0 && seconds < 3600 ? (seconds / 60) + ' minute' + (seconds === 60 ? '' : 's') : (seconds / 60) + ' minutes');\nnode.status({ fill: 'green', shape: 'dot', text: 'refresh every ' + label });\nnode.send({ topic: 'dashboard/refresh', payload: Date.now() });\nreturn null;",
+    "name": "Apply API polling interval",
+    "func": "const allowed = [15, 30, 60, 300, 900];\nconst seconds = Number(msg.payload);\nif (!allowed.includes(seconds)) {\n    node.warn('Ignoring unsupported API polling interval: ' + msg.payload);\n    return null;\n}\nconst previous = context.get('refreshTimer');\nif (previous) clearInterval(previous);\nconst intervalMs = seconds * 1000;\nconst timer = setInterval(() => node.send({ topic: 'dashboard/refresh', payload: Date.now() }), intervalMs);\ncontext.set('refreshTimer', timer);\ncontext.set('refreshIntervalSeconds', seconds);\nconst label = seconds < 60 ? seconds + ' seconds' : (seconds % 60 === 0 && seconds < 3600 ? (seconds / 60) + ' minute' + (seconds === 60 ? '' : 's') : (seconds / 60) + ' minutes');\nnode.status({ fill: 'green', shape: 'dot', text: 'API poll every ' + label });\nnode.send({ topic: 'dashboard/refresh', payload: Date.now() });\nreturn null;",
     "outputs": 1,
     "timeout": 0,
     "noerr": 0,
-    "initialize": "const seconds = 60;\nconst intervalMs = seconds * 1000;\nconst timer = setInterval(() => node.send({ topic: 'dashboard/refresh', payload: Date.now() }), intervalMs);\ncontext.set('refreshTimer', timer);\ncontext.set('refreshIntervalSeconds', seconds);\nglobal.set('metricRefreshIntervalMs', intervalMs);\nnode.status({ fill: 'green', shape: 'dot', text: 'refresh every 1 minute' });",
+    "initialize": "const seconds = 60;\nconst intervalMs = seconds * 1000;\nconst timer = setInterval(() => node.send({ topic: 'dashboard/refresh', payload: Date.now() }), intervalMs);\ncontext.set('refreshTimer', timer);\ncontext.set('refreshIntervalSeconds', seconds);\nnode.status({ fill: 'green', shape: 'dot', text: 'API poll every 1 minute' });",
     "finalize": "const timer = context.get('refreshTimer');\nif (timer) clearInterval(timer);\ncontext.set('refreshTimer', null);",
     "libs": [],
     "x": 580,
@@ -1929,33 +1995,15 @@
     "wires": []
   },
   {
-    "id": "c100000000000004",
-    "type": "link in",
-    "z": "a100000000000001",
-    "name": "Dashboard-selected refresh interval",
-    "mode": null,
-    "links": [
-      "c100000000000003"
-    ],
-    "x": 180,
-    "y": 100,
-    "wires": [
-      [
-        "a100000000000004",
-        "a10000000000000a"
-      ]
-    ]
-  },
-  {
     "id": "c100000000000006",
     "type": "ui-markdown",
     "z": "b400000000000001",
     "group": "c100000000000005",
     "name": "Refresh frequency note",
-    "order": 1,
-    "width": 8,
+    "order": 3,
+    "width": 12,
     "height": 2,
-    "content": "Controls Open-Meteo forecast polling and the sensor update cadence displayed on the dashboard. The simulator must be running for sensor data. Forecast models can update less often than they are fetched. Continuous 15-second polling can exceed the free API daily request limit.",
+    "content": "API poll interval controls Open-Meteo request frequency and usage. Sensor display is independent and defaults to every simulator message (about 5 seconds). Choose a slower sensor display interval to reduce dashboard updates without changing incoming MQTT data.",
     "className": "",
     "x": 610,
     "y": 920,
@@ -1964,23 +2012,530 @@
     ]
   },
   {
-    "id": "c100000000000007",
+    "id": "d700000000000001",
+    "type": "inject",
+    "z": "b400000000000001",
+    "name": "Poll seven-day history cache",
+    "props": [
+      {
+        "p": "payload"
+      }
+    ],
+    "repeat": "60",
+    "crontab": "",
+    "once": true,
+    "onceDelay": "10",
+    "topic": "",
+    "payload": "",
+    "payloadType": "date",
+    "x": 170,
+    "y": 500,
+    "wires": [
+      [
+        "d700000000000002"
+      ]
+    ]
+  },
+  {
+    "id": "d700000000000002",
+    "type": "http request",
+    "z": "b400000000000001",
+    "name": "Read cached seven-day history",
+    "method": "GET",
+    "ret": "obj",
+    "paytoqs": "ignore",
+    "url": "http://history-cache:8080/history",
+    "tls": "",
+    "persist": false,
+    "proxy": "",
+    "insecureHTTPParser": false,
+    "authType": "",
+    "senderr": false,
+    "x": 440,
+    "y": 500,
+    "wires": [
+      [
+        "d700000000000003"
+      ]
+    ]
+  },
+  {
+    "id": "d700000000000003",
     "type": "function",
-    "z": "a100000000000001",
-    "name": "Throttle sensor dashboard updates",
-    "func": "const intervalMs = Number(global.get('metricRefreshIntervalMs')) || 60000;\nconst now = Date.now();\nconst last = Number(context.get('lastDashboardUpdate')) || 0;\nif (now - last < intervalMs) return null;\ncontext.set('lastDashboardUpdate', now);\nreturn msg;",
-    "outputs": 1,
+    "z": "b400000000000001",
+    "name": "Prepare seven-day history metrics",
+    "func": "const cache = msg.payload || {};\nif (cache.schemaVersion !== 1 || !Array.isArray(cache.days)) {\n    node.warn('Seven-day history cache returned an unsupported payload');\n    return null;\n}\nconst days = cache.days.slice().sort((a, b) => String(a.date).localeCompare(String(b.date)));\nconst numeric = (value) => typeof value === 'number' && Number.isFinite(value) ? value : null;\nconst metricPoints = (source, selector) => days.flatMap((day) => {\n    const raw = selector(day[source] || {});\n    const value = numeric(raw);\n    return value === null ? [] : [{ date: day.date, value }];\n});\nconst weatherTemp = metricPoints('weather', (weather) => weather.airTemperatureC && weather.airTemperatureC.mean);\nconst maxWind = metricPoints('weather', (weather) => weather.windSpeedKmh && weather.windSpeedKmh.max);\nconst rainfall = metricPoints('weather', (weather) => weather.rainfallMm);\nconst seaTemp = metricPoints('marine', (marine) => marine.seaSurfaceTemperatureC && marine.seaSurfaceTemperatureC.mean);\nconst seaLevel = metricPoints('marine', (marine) => marine.seaLevelHeightMslM && marine.seaLevelHeightMslM.mean);\nconst waves = metricPoints('marine', (marine) => marine.waveHeightM && marine.waveHeightM.mean);\nconst avg = (points) => points.length ? points.reduce((sum, point) => sum + point.value, 0) / points.length : null;\nconst total = (points) => points.length ? points.reduce((sum, point) => sum + point.value, 0) : null;\nconst fmt = (value, digits) => value === null ? 'n/a' : value.toFixed(digits);\nconst firstDate = cache.windowStart || (days[0] && days[0].date) || 'not available';\nconst lastDate = cache.windowEnd || (days[days.length - 1] && days[days.length - 1].date) || 'not available';\nconst updated = cache.updatedAt ? new Date(cache.updatedAt).toISOString().replace('T', ' ').slice(0, 16) + ' UTC' : 'not available';\nconst weatherDays = days.filter((day) => day.weather && typeof day.weather === 'object').length;\nconst marineDays = days.filter((day) => day.marine && typeof day.marine === 'object').length;\nconst maxDailyWind = maxWind.length ? Math.max(...maxWind.map((point) => point.value)) : null;\nconst weatherInfo = { payload: '7 completed UTC days: ' + firstDate + ' to ' + lastDate + '. Archived Open-Meteo model summaries, not harbor sensor observations. Updated ' + updated + '. Coverage ' + weatherDays + '/7 days. Mean air temperature ' + fmt(avg(weatherTemp), 1) + ' C; total rainfall ' + fmt(total(rainfall), 1) + ' mm; highest daily maximum wind ' + fmt(maxDailyWind, 1) + ' km/h.' };\nconst marineInfo = { payload: '7 completed UTC days: ' + firstDate + ' to ' + lastDate + '. Archived Open-Meteo marine model summaries, not physical instrument readings. Updated ' + updated + '. Coverage ' + marineDays + '/7 days. Mean of daily means: sea-surface temperature ' + fmt(avg(seaTemp), 1) + ' C; sea level ' + fmt(avg(seaLevel), 2) + ' m MSL; wave height ' + fmt(avg(waves), 2) + ' m.' };\nreturn [\n    { topic: 'history-air-temperature', action: 'replace', payload: weatherTemp },\n    { topic: 'history-max-wind', action: 'replace', payload: maxWind },\n    { topic: 'history-rainfall', action: 'replace', payload: rainfall },\n    { topic: 'history-sea-temperature', action: 'replace', payload: seaTemp },\n    { topic: 'history-sea-level', action: 'replace', payload: seaLevel },\n    { topic: 'history-wave-height', action: 'replace', payload: waves },\n    weatherInfo,\n    marineInfo\n];",
+    "outputs": 8,
     "timeout": 0,
     "noerr": 0,
     "initialize": "",
     "finalize": "",
     "libs": [],
-    "x": 1320,
-    "y": 560,
+    "x": 720,
+    "y": 500,
     "wires": [
       [
-        "b500000000000003"
+        "d700000000000006"
+      ],
+      [
+        "d700000000000007"
+      ],
+      [
+        "d700000000000008"
+      ],
+      [
+        "d700000000000009"
+      ],
+      [
+        "d70000000000000a"
+      ],
+      [
+        "d70000000000000b"
+      ],
+      [
+        "d70000000000000c"
+      ],
+      [
+        "d70000000000000d"
       ]
+    ]
+  },
+  {
+    "id": "d700000000000006",
+    "type": "ui-chart",
+    "z": "b400000000000001",
+    "group": "d700000000000004",
+    "name": "Seven-day mean air temperature",
+    "label": "Daily mean air temperature",
+    "order": 2,
+    "chartType": "line",
+    "category": "topic",
+    "categoryType": "msg",
+    "xAxisLabel": "Date",
+    "xAxisProperty": "date",
+    "xAxisPropertyType": "property",
+    "xAxisType": "category",
+    "xAxisFormat": "",
+    "xAxisFormatType": "auto",
+    "xmin": "",
+    "xmax": "",
+    "yAxisLabel": "Temperature (°C)",
+    "yAxisProperty": "value",
+    "yAxisPropertyType": "property",
+    "ymin": "",
+    "ymax": "",
+    "bins": 10,
+    "action": "replace",
+    "stackSeries": false,
+    "pointShape": "circle",
+    "pointRadius": 3,
+    "showLegend": false,
+    "removeOlder": 1,
+    "removeOlderUnit": "3600",
+    "removeOlderPoints": "",
+    "colors": [
+      "#087e8b",
+      "#f2a541"
+    ],
+    "textColor": [
+      "#666666"
+    ],
+    "textColorDefault": true,
+    "gridColor": [
+      "#e5e5e5"
+    ],
+    "gridColorDefault": true,
+    "width": 4,
+    "height": 6,
+    "className": "",
+    "interpolation": "linear",
+    "x": 1110,
+    "y": 650,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "d700000000000007",
+    "type": "ui-chart",
+    "z": "b400000000000001",
+    "group": "d700000000000004",
+    "name": "Seven-day maximum wind",
+    "label": "Daily maximum wind speed",
+    "order": 3,
+    "chartType": "line",
+    "category": "topic",
+    "categoryType": "msg",
+    "xAxisLabel": "Date",
+    "xAxisProperty": "date",
+    "xAxisPropertyType": "property",
+    "xAxisType": "category",
+    "xAxisFormat": "",
+    "xAxisFormatType": "auto",
+    "xmin": "",
+    "xmax": "",
+    "yAxisLabel": "Wind speed (km/h)",
+    "yAxisProperty": "value",
+    "yAxisPropertyType": "property",
+    "ymin": "",
+    "ymax": "",
+    "bins": 10,
+    "action": "replace",
+    "stackSeries": false,
+    "pointShape": "circle",
+    "pointRadius": 3,
+    "showLegend": false,
+    "removeOlder": 1,
+    "removeOlderUnit": "3600",
+    "removeOlderPoints": "",
+    "colors": [
+      "#f2a541",
+      "#f2a541"
+    ],
+    "textColor": [
+      "#666666"
+    ],
+    "textColorDefault": true,
+    "gridColor": [
+      "#e5e5e5"
+    ],
+    "gridColorDefault": true,
+    "width": 4,
+    "height": 6,
+    "className": "",
+    "interpolation": "linear",
+    "x": 1110,
+    "y": 720,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "d700000000000008",
+    "type": "ui-chart",
+    "z": "b400000000000001",
+    "group": "d700000000000004",
+    "name": "Seven-day rainfall",
+    "label": "Daily rainfall",
+    "order": 4,
+    "chartType": "bar",
+    "category": "topic",
+    "categoryType": "msg",
+    "xAxisLabel": "Date",
+    "xAxisProperty": "date",
+    "xAxisPropertyType": "property",
+    "xAxisType": "category",
+    "xAxisFormat": "",
+    "xAxisFormatType": "auto",
+    "xmin": "",
+    "xmax": "",
+    "yAxisLabel": "Rainfall (mm)",
+    "yAxisProperty": "value",
+    "yAxisPropertyType": "property",
+    "ymin": "",
+    "ymax": "",
+    "bins": 10,
+    "action": "replace",
+    "stackSeries": false,
+    "pointShape": "circle",
+    "pointRadius": 3,
+    "showLegend": false,
+    "removeOlder": 1,
+    "removeOlderUnit": "3600",
+    "removeOlderPoints": "",
+    "colors": [
+      "#087e8b",
+      "#f2a541"
+    ],
+    "textColor": [
+      "#666666"
+    ],
+    "textColorDefault": true,
+    "gridColor": [
+      "#e5e5e5"
+    ],
+    "gridColorDefault": true,
+    "width": 4,
+    "height": 6,
+    "className": "",
+    "interpolation": "linear",
+    "x": 1110,
+    "y": 790,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "d700000000000009",
+    "type": "ui-chart",
+    "z": "b400000000000001",
+    "group": "d700000000000005",
+    "name": "Seven-day sea-surface temperature",
+    "label": "Daily mean sea-surface temperature",
+    "order": 2,
+    "chartType": "line",
+    "category": "topic",
+    "categoryType": "msg",
+    "xAxisLabel": "Date",
+    "xAxisProperty": "date",
+    "xAxisPropertyType": "property",
+    "xAxisType": "category",
+    "xAxisFormat": "",
+    "xAxisFormatType": "auto",
+    "xmin": "",
+    "xmax": "",
+    "yAxisLabel": "Temperature (°C)",
+    "yAxisProperty": "value",
+    "yAxisPropertyType": "property",
+    "ymin": "",
+    "ymax": "",
+    "bins": 10,
+    "action": "replace",
+    "stackSeries": false,
+    "pointShape": "circle",
+    "pointRadius": 3,
+    "showLegend": false,
+    "removeOlder": 1,
+    "removeOlderUnit": "3600",
+    "removeOlderPoints": "",
+    "colors": [
+      "#087e8b",
+      "#f2a541"
+    ],
+    "textColor": [
+      "#666666"
+    ],
+    "textColorDefault": true,
+    "gridColor": [
+      "#e5e5e5"
+    ],
+    "gridColorDefault": true,
+    "width": 4,
+    "height": 6,
+    "className": "",
+    "interpolation": "linear",
+    "x": 1110,
+    "y": 650,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "d70000000000000a",
+    "type": "ui-chart",
+    "z": "b400000000000001",
+    "group": "d700000000000005",
+    "name": "Seven-day mean sea level",
+    "label": "Daily mean sea level",
+    "order": 3,
+    "chartType": "line",
+    "category": "topic",
+    "categoryType": "msg",
+    "xAxisLabel": "Date",
+    "xAxisProperty": "date",
+    "xAxisPropertyType": "property",
+    "xAxisType": "category",
+    "xAxisFormat": "",
+    "xAxisFormatType": "auto",
+    "xmin": "",
+    "xmax": "",
+    "yAxisLabel": "Sea level (m MSL)",
+    "yAxisProperty": "value",
+    "yAxisPropertyType": "property",
+    "ymin": "",
+    "ymax": "",
+    "bins": 10,
+    "action": "replace",
+    "stackSeries": false,
+    "pointShape": "circle",
+    "pointRadius": 3,
+    "showLegend": false,
+    "removeOlder": 1,
+    "removeOlderUnit": "3600",
+    "removeOlderPoints": "",
+    "colors": [
+      "#f2a541",
+      "#f2a541"
+    ],
+    "textColor": [
+      "#666666"
+    ],
+    "textColorDefault": true,
+    "gridColor": [
+      "#e5e5e5"
+    ],
+    "gridColorDefault": true,
+    "width": 4,
+    "height": 6,
+    "className": "",
+    "interpolation": "linear",
+    "x": 1110,
+    "y": 720,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "d70000000000000b",
+    "type": "ui-chart",
+    "z": "b400000000000001",
+    "group": "d700000000000005",
+    "name": "Seven-day wave height",
+    "label": "Daily mean wave height",
+    "order": 4,
+    "chartType": "line",
+    "category": "topic",
+    "categoryType": "msg",
+    "xAxisLabel": "Date",
+    "xAxisProperty": "date",
+    "xAxisPropertyType": "property",
+    "xAxisType": "category",
+    "xAxisFormat": "",
+    "xAxisFormatType": "auto",
+    "xmin": "",
+    "xmax": "",
+    "yAxisLabel": "Wave height (m)",
+    "yAxisProperty": "value",
+    "yAxisPropertyType": "property",
+    "ymin": "",
+    "ymax": "",
+    "bins": 10,
+    "action": "replace",
+    "stackSeries": false,
+    "pointShape": "circle",
+    "pointRadius": 3,
+    "showLegend": false,
+    "removeOlder": 1,
+    "removeOlderUnit": "3600",
+    "removeOlderPoints": "",
+    "colors": [
+      "#087e8b",
+      "#f2a541"
+    ],
+    "textColor": [
+      "#666666"
+    ],
+    "textColorDefault": true,
+    "gridColor": [
+      "#e5e5e5"
+    ],
+    "gridColorDefault": true,
+    "width": 4,
+    "height": 6,
+    "className": "",
+    "interpolation": "linear",
+    "x": 1110,
+    "y": 790,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "d70000000000000c",
+    "type": "ui-markdown",
+    "z": "b400000000000001",
+    "group": "d700000000000004",
+    "name": "Weather history summary",
+    "order": 1,
+    "width": 12,
+    "height": 2,
+    "content": "Seven completed UTC days of archived model forecasts.",
+    "className": "",
+    "x": 1100,
+    "y": 1050,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "d70000000000000d",
+    "type": "ui-markdown",
+    "z": "b400000000000001",
+    "group": "d700000000000005",
+    "name": "Marine history summary",
+    "order": 1,
+    "width": 12,
+    "height": 2,
+    "content": "Seven completed UTC days of archived marine model data.",
+    "className": "",
+    "x": 1100,
+    "y": 1050,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "c100000000000008",
+    "type": "ui-dropdown",
+    "z": "b400000000000001",
+    "group": "c100000000000005",
+    "name": "Sensor display frequency",
+    "label": "Sensor display interval",
+    "tooltip": "Choose whether dashboard widgets receive every MQTT update or a slower cadence.",
+    "order": 2,
+    "width": 6,
+    "height": 1,
+    "passthru": false,
+    "multiple": false,
+    "chips": true,
+    "clearable": false,
+    "options": [
+      {
+        "label": "Every message (~5 sec)",
+        "value": 0,
+        "type": "num"
+      },
+      {
+        "label": "5 seconds",
+        "value": 5,
+        "type": "num"
+      },
+      {
+        "label": "15 seconds",
+        "value": 15,
+        "type": "num"
+      },
+      {
+        "label": "30 seconds",
+        "value": 30,
+        "type": "num"
+      },
+      {
+        "label": "1 minute",
+        "value": 60,
+        "type": "num"
+      }
+    ],
+    "payload": 0,
+    "topic": "topic",
+    "topicType": "msg",
+    "className": "",
+    "typeIsComboBox": false,
+    "msgTrigger": "onClose",
+    "x": 270,
+    "y": 1000,
+    "wires": [
+      [
+        "c100000000000009"
+      ]
+    ]
+  },
+  {
+    "id": "c100000000000009",
+    "type": "function",
+    "z": "b400000000000001",
+    "name": "Apply sensor display interval",
+    "func": "const allowed = [0, 5, 15, 30, 60];\nconst seconds = Number(msg.payload);\nif (!allowed.includes(seconds)) {\n    node.warn('Ignoring unsupported sensor display interval: ' + msg.payload);\n    return null;\n}\nglobal.set('sensorDashboardIntervalMs', seconds * 1000);\nconst label = seconds === 0 ? 'every MQTT message' : 'every ' + seconds + ' seconds';\nnode.status({ fill: 'green', shape: 'dot', text: 'sensor display ' + label });\nreturn null;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "global.set('sensorDashboardIntervalMs', 0); node.status({ fill: 'green', shape: 'dot', text: 'sensor display every MQTT message' });",
+    "finalize": "",
+    "libs": [],
+    "x": 580,
+    "y": 1000,
+    "wires": [
+      []
     ]
   }
 ]

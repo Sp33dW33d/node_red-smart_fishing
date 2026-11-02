@@ -23,6 +23,7 @@ This checklist tracks repository state. A task is complete only when implementat
 - [x] 3.1a Verify broker startup and local MQTT connectivity.
 - [x] 3.2 Implement a Python telemetry publisher and pin its MQTT client dependency.
 - [x] 3.2a Install the dependency and verify messages reach a running broker.
+- [x] 3.2b Start the simulator as a Compose service with the launcher and verify it publishes to Mosquitto.
 - [x] 3.3 Add Node-RED MQTT input and validate/normalize the simulator's documented topic/payload schema.
 - [x] 3.3a Deploy the updated flow and verify a live message appears in Node-RED output.
 - [x] 3.4 Verify simulated telemetry reaches the normalized downstream flow.
@@ -37,6 +38,7 @@ This checklist tracks repository state. A task is complete only when implementat
 - [x] 4.6 Display combined weather, marine, and telemetry summary values on the Overview dashboard.
 - [x] 4.7 Add a selectable dashboard update interval (15 seconds, 30 seconds, 1 minute, 5 minutes, or 15 minutes) and apply it to API refreshes and dashboard telemetry updates.
 - [ ] 4.8 Show API failures, missing values, and stale-data state in the UI.
+- [ ] 4.9 Display and verify cached seven-day weather and marine history metrics in dashboard charts.
 
 ## Phase 5: Packaging and release checks
 

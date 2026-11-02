@@ -31,6 +31,7 @@ Smart Fishing is an IND4 assignment being developed in phases as a Node-RED envi
 | P4-6 | Combine weather, marine, and telemetry readings in Overview summary values. | Implemented and verified; Phase 4.6 |
 | P4-7 | Let users select the dashboard update interval. | Implemented and verified; Phase 4.7 |
 | P4-8 | Indicate API failures, missing values, and stale data in the UI. | Planned: Phase 4.8 |
+| P4-9 | Show cached seven-day weather and marine history charts. | In progress; Phase 4.9 |
 | P5-1 | Document and verify clean deployment of the completed implementation. | Phase 5 |
 
 ## Data and behavior
@@ -41,7 +42,7 @@ Smart Fishing is an IND4 assignment being developed in phases as a Node-RED envi
 - Forecast/model values are not measurements from physical harbor sensors and may be unavailable for some coordinates.
 - Normalized payload and error contracts are documented in [system_architecture.md](system_architecture.md).
 - Requests use HTTPS. The configured Open-Meteo endpoints require no API key.
-- Historical cache values are daily summaries of recent archived model forecasts, not physical sensor measurements; the JSON cache is at `cache/history-7d.json` and is not connected to a dashboard yet.
+- Historical cache values are daily summaries of recent archived model forecasts, not physical sensor measurements; the JSON cache is at `cache/history-7d.json` and feeds the seven-day trend charts.
 
 ## Non-functional requirements
 
@@ -85,6 +86,10 @@ Smart Fishing is an IND4 assignment being developed in phases as a Node-RED envi
 - [x] Normalized MQTT values reach their dashboard gauges, trends, and summaries (Phase 4.5).
 - [x] Combined summary values are shown on Overview and the update interval is selectable (Phases 4.6–4.7).
 - [ ] Stale-data and API-error states are shown to users (Phase 4.8).
+
+### Phase 4.9 (historical charts)
+
+- [ ] Seven-day weather and marine history charts render from the local cache endpoint.
 
 ### Whole project (pending later phases)
 

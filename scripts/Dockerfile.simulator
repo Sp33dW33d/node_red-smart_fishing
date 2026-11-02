@@ -1,0 +1,8 @@
+FROM python:3.13.18-slim-bookworm
+
+WORKDIR /app
+COPY requirements.txt ./requirements.txt
+RUN pip install --no-cache-dir --disable-pip-version-check -r requirements.txt
+COPY simulate-mqtt.py ./simulate-mqtt.py
+
+CMD ["python", "/app/simulate-mqtt.py"]

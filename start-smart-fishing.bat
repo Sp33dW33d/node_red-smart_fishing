@@ -8,7 +8,7 @@ for /f "usebackq delims=" %%P in (`powershell.exe -NoProfile -Command "$p = Star
 if not defined WSL_KEEPALIVE_PID goto :wsl_keepalive_failed
 
 echo Starting Smart Fishing services through WSL Docker Compose...
-wsl.exe -e sh -lc "docker compose up -d"
+wsl.exe -e sh -lc "docker compose up -d --build"
 if errorlevel 1 goto :startup_failed
 
 set "NODE_RED_PORT="
