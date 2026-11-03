@@ -2,6 +2,10 @@
 
 Smart Fishing is an IND4 assignment project built with Node-RED. It polls Open-Meteo weather and marine forecast APIs and ingests simulated MQTT sensor messages, validating and normalizing the data for downstream use. Phase 4 adds a FlowFuse Dashboard interface. Overview, Environment, and Water Conditions now show live values from Open-Meteo and simulated MQTT telemetry.
 
+## Dashboard demo
+
+![Short walkthrough of the Overview, Environment, and Water Conditions dashboards](docs/media/smart-fishing-demo.gif)
+
 ## Current status
 
 - Weather and marine API flows run on startup and at the interval selected on the Overview dashboard (15 seconds, 30 seconds, 1 minute, 5 minutes, or 15 minutes; default 1 minute).
@@ -38,6 +42,8 @@ Smart Fishing is an IND4 assignment project built with Node-RED. It polls Open-M
 │   └── config/
 │       └── mosquitto.conf
 ├── docs/
+│   ├── media/
+│   │   └── smart-fishing-demo.gif
 │   ├── project_specification.md
 │   ├── system_architecture.md
 │   ├── technology_stack.md
