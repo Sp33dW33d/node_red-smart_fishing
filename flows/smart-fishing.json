@@ -940,15 +940,15 @@
   {
     "id": "e800000000000004",
     "type": "ui-template",
-    "z": "a100000000000001",
+    "z": "b400000000000001",
     "group": "b400000000000005",
     "page": "",
     "ui": "",
     "name": "Fishing conditions recommendation",
     "order": 2,
     "width": 12,
-    "height": 4,
-    "format": "<div v-if=\"msg.payload\" style=\"padding: 4px 8px;\">\n  <div style=\"font-size: 2rem; font-weight: 700; margin-bottom: 8px;\">\n    {{ msg.payload.status === 'favorable' ? '☀️' : msg.payload.status === 'caution' ? '🌤️' : '🌊' }}\n    {{ msg.payload.status === 'favorable' ? 'Favorable fishing conditions' : msg.payload.status === 'caution' ? 'Mixed fishing conditions' : 'Challenging fishing conditions' }}\n  </div>\n  <div style=\"font-size: 1.05rem; line-height: 1.45; margin-bottom: 10px;\">\n    {{ msg.payload.status === 'favorable' ? 'The weather and sea look welcoming today. It is a good time to plan a trip while keeping normal safety checks in place.' : msg.payload.status === 'caution' ? 'Conditions are a little mixed. Keep an eye on the wind, waves, and forecast before heading out.' : 'The sea is having a rougher day. Consider waiting for conditions to improve and put safety ahead of the catch.' }}\n  </div>\n  <div><strong>Conditions score:</strong> {{ msg.payload.score }}/100 &nbsp; · &nbsp; <strong>Catch outlook:</strong> {{ (msg.payload.catchRateMultiplier * 100).toFixed(0) }}% of the favorable baseline</div>\n  <div style=\"margin-top: 8px; color: #555;\">{{ (msg.payload.reasons || []).join(' ') }}</div>\n</div>\n<div v-else style=\"padding: 8px;\">Waiting for the latest fishing conditions recommendation…</div>",
+    "height": 6,
+    "format": "<style>\n.fishing-phone-card { color: #ffffff; border-radius: 24px; padding: 22px 24px; background: linear-gradient(135deg, #101a43 0%, #2d3e9e 52%, #cf3c96 140%); box-shadow: 0 12px 28px rgba(25, 30, 85, 0.26); overflow: hidden; }\n.fishing-phone-card .eyebrow { opacity: .78; font-size: .78rem; letter-spacing: .12em; text-transform: uppercase; }\n.fishing-phone-card .top-row { display: flex; align-items: center; justify-content: space-between; gap: 18px; margin-top: 8px; }\n.fishing-phone-card .condition-side { display: flex; align-items: center; gap: 14px; }\n.fishing-phone-card .title { font-size: clamp(1.35rem, 2.5vw, 2rem); font-weight: 750; line-height: 1.1; }\n.fishing-phone-card .subtitle { margin-top: 6px; opacity: .82; font-size: .95rem; }\n.fishing-phone-card .condition-icon { font-size: 3.6rem; line-height: 1; filter: drop-shadow(0 4px 8px rgba(0,0,0,.2)); }\n.fishing-phone-card .mdi { font-family: 'Material Design Icons'; font-style: normal; }\n.fishing-phone-card .score { min-width: 74px; padding: 10px 12px; border-radius: 18px; background: rgba(255,255,255,.16); text-align: center; backdrop-filter: blur(8px); }\n.fishing-phone-card .score strong { display: block; font-size: 1.55rem; }\n.fishing-phone-card .score small { opacity: .8; }\n.fishing-phone-card .metrics { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin-top: 22px; }\n.fishing-phone-card .metric { padding: 12px; border-top: 1px solid rgba(255,255,255,.28); background: rgba(255,255,255,.08); border-radius: 14px; }\n.fishing-phone-card .metric-label { display: block; opacity: .78; font-size: .78rem; }\n.fishing-phone-card .metric-value { display: block; margin-top: 3px; font-size: 1.12rem; font-weight: 700; }\n.fishing-phone-card .advice { margin-top: 16px; padding: 13px 15px; border-radius: 15px; background: rgba(9, 15, 45, .38); line-height: 1.4; }\n.fishing-phone-card .reasons { margin-top: 7px; opacity: .78; font-size: .82rem; }\n@media (max-width: 700px) { .fishing-phone-card .metrics { grid-template-columns: repeat(2, minmax(0,1fr)); } .fishing-phone-card .condition-icon { font-size: 2.8rem; } }\n</style>\n<div v-if=\"msg.payload\" class=\"fishing-phone-card\">\n  <div class=\"eyebrow\">Smart Fishing · {{ (msg.payload.location && msg.payload.location.name) || 'Configured location' }}</div>\n  <div class=\"top-row\">\n    <div>\n      <div class=\"title\">{{ msg.payload.status === 'favorable' ? 'Favorable conditions' : msg.payload.status === 'caution' ? 'Mixed conditions' : 'Challenging conditions' }}</div>\n      <div class=\"subtitle\">{{ msg.payload.status === 'favorable' ? 'The sea looks welcoming today.' : msg.payload.status === 'caution' ? 'Keep an eye on the forecast before heading out.' : 'Consider waiting for calmer conditions.' }}</div>\n    </div>\n    <div class=\"condition-side\">\n      <div class=\"score\"><strong>{{ msg.payload.score }}</strong><small>out of 100</small></div>\n      <div class=\"condition-icon\"><i :class=\"'mdi ' + (msg.payload.status === 'favorable' ? 'mdi-weather-sunny' : msg.payload.status === 'caution' ? 'mdi-weather-partly-cloudy' : 'mdi-weather-stormy')\"></i></div>\n    </div>\n  </div>\n  <div class=\"metrics\">\n    <div class=\"metric\"><span class=\"metric-label\"><i class=\"mdi mdi-weather-windy\"></i> Wind</span><span class=\"metric-value\">{{ Number(msg.payload.inputs.windSpeedKmh).toFixed(1) }} km/h</span></div>\n    <div class=\"metric\"><span class=\"metric-label\"><i class=\"mdi mdi-waves\"></i> Waves</span><span class=\"metric-value\">{{ Number(msg.payload.inputs.waveHeightM).toFixed(2) }} m</span></div>\n    <div class=\"metric\"><span class=\"metric-label\"><i class=\"mdi mdi-weather-rainy\"></i> Rain today</span><span class=\"metric-value\">{{ Number(msg.payload.inputs.rainfallMm).toFixed(1) }} mm</span></div>\n    <div class=\"metric\"><span class=\"metric-label\"><i class=\"mdi mdi-thermometer\"></i> Sea temperature</span><span class=\"metric-value\">{{ Number(msg.payload.inputs.seaTemperatureC).toFixed(1) }} °C</span></div>\n  </div>\n  <div class=\"advice\"><strong>{{ msg.payload.status === 'favorable' ? 'Good time to plan a trip' : msg.payload.status === 'caution' ? 'Take a cautious approach' : 'Safety comes first' }}</strong><br>{{ msg.payload.status === 'favorable' ? 'Conditions are within the preferred ranges, with a higher catch outlook.' : msg.payload.status === 'caution' ? 'Fishing may still be possible, but monitor wind and wave changes.' : 'The current mix of conditions suggests waiting for improvement.' }}<div class=\"reasons\">{{ (msg.payload.reasons || []).join(' ') }}</div></div>\n</div>\n<div v-else class=\"fishing-phone-card\">Waiting for the latest fishing conditions recommendation…</div>",
     "noerr": 0,
     "storeOutMessages": true,
     "passthru": true,
@@ -964,7 +964,7 @@
   {
     "id": "e900000000000008",
     "type": "mqtt in",
-    "z": "a100000000000001",
+    "z": "b400000000000001",
     "name": "Fishing recommendation to dashboard",
     "topic": "smartfishing/conditions",
     "qos": "1",
@@ -978,7 +978,7 @@
     "y": 640,
     "wires": [
       [
-        "e800000000000004"
+        "e900000000000018"
       ]
     ]
   },
@@ -2141,10 +2141,10 @@
     "z": "b400000000000001",
     "group": "c100000000000005",
     "name": "Refresh frequency note",
-    "order": 4,
+    "order": 5,
     "width": "0",
     "height": "0",
-    "content": "API poll interval controls Open-Meteo request frequency and usage. Sensor display is independent and defaults to every simulator message (about 5 seconds). Choose a slower sensor display interval to reduce dashboard updates without changing incoming MQTT data.",
+    "content": "API poll interval controls Open-Meteo requests. Sensor display is independent. Manual conditions preview is dashboard-only and does not change the backend or simulator.",
     "className": "",
     "x": 610,
     "y": 920,
@@ -2816,6 +2816,107 @@
     "y": 680,
     "wires": [
       []
+    ]
+  },
+  {
+    "id": "e900000000000018",
+    "type": "function",
+    "z": "b400000000000001",
+    "name": "Apply dashboard-only conditions preview",
+    "func": "const previewValues = {\n    favorable: { score: 100, catchRateMultiplier: 1.5, inputs: { windSpeedKmh: 8.0, waveHeightM: 0.4, rainfallMm: 0.5, seaTemperatureC: 28.0 }, reasons: ['Wind, waves, rainfall, and sea temperature are within preferred ranges.'] },\n    caution: { score: 55, catchRateMultiplier: 0.7, inputs: { windSpeedKmh: 19.0, waveHeightM: 1.4, rainfallMm: 5.0, seaTemperatureC: 28.0 }, reasons: ['Wind and waves are moderate; monitor the forecast before heading out.'] },\n    poor: { score: 15, catchRateMultiplier: 0.2, inputs: { windSpeedKmh: 32.0, waveHeightM: 2.8, rainfallMm: 16.0, seaTemperatureC: 28.0 }, reasons: ['Wind, waves, and rainfall are high; safety should come first.'] }\n};\nlet enabled = Boolean(context.get('manualConditionsOverride'));\nlet status = String(context.get('manualConditionsStatus') || 'favorable');\nconst controlPayload = msg.payload && typeof msg.payload === 'object' && !Array.isArray(msg.payload)\n    ? (msg.payload.value ?? msg.payload.status ?? msg.payload.payload)\n    : msg.payload;\nconst rawPayload = msg.topic === 'smartfishing/conditions' ? msg.payload : controlPayload;\nconst payloadIsBoolean = rawPayload === true || rawPayload === false || rawPayload === 1 || rawPayload === 0 || rawPayload === '1' || rawPayload === '0' || rawPayload === 'true' || rawPayload === 'false';\nconst payloadIsStatus = typeof rawPayload === 'string' && Boolean(previewValues[rawPayload.toLowerCase()]);\nif (msg.topic === 'manual-override-enabled' || payloadIsBoolean) {\n    enabled = rawPayload === true || rawPayload === 1 || rawPayload === '1' || rawPayload === 'true';\n    context.set('manualConditionsOverride', enabled);\n} else if (msg.topic === 'manual-override-status' || payloadIsStatus) {\n    status = previewValues[String(rawPayload).toLowerCase()] ? String(rawPayload).toLowerCase() : status;\n    context.set('manualConditionsStatus', status);\n} else if (msg.topic === 'smartfishing/conditions' && msg.payload && typeof msg.payload === 'object') {\n    global.set('latestFishingRecommendation', msg.payload);\n    if (!enabled) return msg;\n    return null;\n} else {\n    return null;\n}\nif (!enabled) {\n    const live = global.get('latestFishingRecommendation');\n    return live ? { topic: 'smartfishing/conditions', payload: live } : null;\n}\nconst preview = previewValues[status] || previewValues.favorable;\nmsg.topic = 'smartfishing/conditions/preview';\nmsg.payload = {\n    source: 'Dashboard-only manual preview',\n    status: status,\n    score: preview.score,\n    generatedAt: new Date().toISOString(),\n    location: { name: String(env.get('LOCATION_NAME') || 'Configured location') },\n    inputs: preview.inputs,\n    reasons: preview.reasons,\n    catchRateMultiplier: preview.catchRateMultiplier\n};\nreturn msg;",
+    "outputs": 1,
+    "timeout": 0,
+    "noerr": 0,
+    "initialize": "context.set('manualConditionsOverride', false); context.set('manualConditionsStatus', 'favorable');",
+    "finalize": "",
+    "libs": [],
+    "x": 700,
+    "y": 1080,
+    "wires": [
+      [
+        "e800000000000004"
+      ]
+    ]
+  },
+  {
+    "id": "e900000000000016",
+    "type": "ui-switch",
+    "z": "b400000000000001",
+    "group": "c100000000000005",
+    "name": "Manual conditions preview",
+    "label": "Manual conditions preview",
+    "tooltip": "Dashboard-only preview; does not change the backend or simulator.",
+    "order": 3,
+    "width": 6,
+    "height": 1,
+    "passthru": false,
+    "decouple": false,
+    "topic": "manual-override-enabled",
+    "style": "",
+    "className": "",
+    "onvalue": "true",
+    "onvalueType": "bool",
+    "onicon": "",
+    "oncolor": "",
+    "offvalue": "false",
+    "offvalueType": "bool",
+    "officon": "",
+    "offcolor": "",
+    "x": 310,
+    "y": 960,
+    "wires": [
+      [
+        "e900000000000018"
+      ]
+    ],
+    "topicType": "str",
+    "layout": "row-spread",
+    "clickableArea": "switch"
+  },
+  {
+    "id": "e900000000000017",
+    "type": "ui-dropdown",
+    "z": "b400000000000001",
+    "group": "c100000000000005",
+    "name": "Preview condition",
+    "label": "Preview condition",
+    "tooltip": "Choose the dashboard-only condition to showcase.",
+    "order": 4,
+    "width": 6,
+    "height": 1,
+    "passthru": true,
+    "multiple": false,
+    "chips": true,
+    "clearable": false,
+    "options": [
+      {
+        "label": "Favorable",
+        "value": "favorable",
+        "type": "str"
+      },
+      {
+        "label": "Caution",
+        "value": "caution",
+        "type": "str"
+      },
+      {
+        "label": "Poor",
+        "value": "poor",
+        "type": "str"
+      }
+    ],
+    "payload": "favorable",
+    "topic": "manual-override-status",
+    "topicType": "str",
+    "className": "",
+    "typeIsComboBox": false,
+    "msgTrigger": "onChange",
+    "x": 540,
+    "y": 1000,
+    "wires": [
+      [
+        "e900000000000018"
+      ]
     ]
   }
 ]
