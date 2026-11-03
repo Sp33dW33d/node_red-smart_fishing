@@ -472,8 +472,8 @@
     "type": "function",
     "z": "a100000000000001",
     "name": "Validate and normalize weather",
-    "func": "if (msg.error) return null;\nconst data = msg.payload;\nif (msg.statusCode && (Number(msg.statusCode) < 200 || Number(msg.statusCode) >= 300)) {\n    node.error('Weather API returned HTTP ' + msg.statusCode, msg);\n    return null;\n}\nif (!data || typeof data !== 'object' || data.error || !data.current || !data.daily || !Array.isArray(data.daily.time) || !Array.isArray(data.daily.rain_sum)) {\n    node.error('Weather API response is missing current conditions or daily rain data', msg);\n    return null;\n}\nconst numeric = (value) => {\n    if (value === null || value === undefined || value === '') return null;\n    const result = Number(value);\n    return Number.isFinite(result) ? result : null;\n};\nconst temperature = numeric(data.current.temperature_2m);\nconst windSpeed = numeric(data.current.wind_speed_10m);\nif (temperature === null || windSpeed === null) {\n    node.error('Weather API response contains invalid temperature or wind speed', msg);\n    return null;\n}\nconst rainfallForecast = [];\nconst count = Math.min(5, data.daily.time.length, data.daily.rain_sum.length);\nfor (let i = 0; i < count; i += 1) {\n    const date = data.daily.time[i];\n    const rain = numeric(data.daily.rain_sum[i]);\n    if (typeof date === 'string' && !Number.isNaN(Date.parse(date)) && rain !== null && rain >= 0) {\n        rainfallForecast.push({ date: date, rainfallMm: rain });\n    }\n}\nif (rainfallForecast.length === 0) {\n    node.error('Weather API response contains no valid daily rainfall values', msg);\n    return null;\n}\nmsg.topic = 'environment/weather';\nmsg.payload = {\n    source: 'Open-Meteo Forecast API',\n    status: 'OK',\n    fetchedAt: new Date().toISOString(),\n    observedAt: typeof data.current.time === 'string' ? data.current.time : null,\n    location: { name: String(env.get('LOCATION_NAME') || 'Sassoon Dock, Mumbai'), latitude: Number(env.get('LOCATION_LATITUDE')), longitude: Number(env.get('LOCATION_LONGITUDE')) },\n    current: { airTemperatureC: temperature, windSpeedKmh: windSpeed },\n    rainfallForecast: rainfallForecast\n};\nreturn msg;",
-    "outputs": 1,
+    "func": "if (msg.error) return null;\nconst data = msg.payload;\nif (msg.statusCode && (Number(msg.statusCode) < 200 || Number(msg.statusCode) >= 300)) {\n    node.error('Weather API returned HTTP ' + msg.statusCode, msg);\n    return null;\n}\nif (!data || typeof data !== 'object' || data.error || !data.current || !data.daily || !Array.isArray(data.daily.time) || !Array.isArray(data.daily.rain_sum)) {\n    node.error('Weather API response is missing current conditions or daily rain data', msg);\n    return null;\n}\nconst numeric = (value) => {\n    if (value === null || value === undefined || value === '') return null;\n    const result = Number(value);\n    return Number.isFinite(result) ? result : null;\n};\nconst temperature = numeric(data.current.temperature_2m);\nconst windSpeed = numeric(data.current.wind_speed_10m);\nif (temperature === null || windSpeed === null) {\n    node.error('Weather API response contains invalid temperature or wind speed', msg);\n    return null;\n}\nconst rainfallForecast = [];\nconst count = Math.min(5, data.daily.time.length, data.daily.rain_sum.length);\nfor (let i = 0; i < count; i += 1) {\n    const date = data.daily.time[i];\n    const rain = numeric(data.daily.rain_sum[i]);\n    if (typeof date === 'string' && !Number.isNaN(Date.parse(date)) && rain !== null && rain >= 0) {\n        rainfallForecast.push({ date: date, rainfallMm: rain });\n    }\n}\nif (rainfallForecast.length === 0) {\n    node.error('Weather API response contains no valid daily rainfall values', msg);\n    return null;\n}\nmsg.topic = 'environment/weather';\nmsg.payload = {\n    source: 'Open-Meteo Forecast API',\n    status: 'OK',\n    fetchedAt: new Date().toISOString(),\n    observedAt: typeof data.current.time === 'string' ? data.current.time : null,\n    location: { name: String(env.get('LOCATION_NAME') || 'Sassoon Dock, Mumbai'), latitude: Number(env.get('LOCATION_LATITUDE')), longitude: Number(env.get('LOCATION_LONGITUDE')) },\n    current: { airTemperatureC: temperature, windSpeedKmh: windSpeed },\n    rainfallForecast: rainfallForecast\n};\nconst statusMsg = { topic: msg.topic, payload: msg.payload };\nreturn [msg, statusMsg];",
+    "outputs": 2,
     "timeout": 0,
     "noerr": 0,
     "initialize": "",
@@ -486,6 +486,9 @@
         "a100000000000007",
         "b500000000000001",
         "a100000000000019"
+      ],
+      [
+        "f200000000000001"
       ]
     ]
   },
@@ -589,8 +592,8 @@
     "type": "function",
     "z": "a100000000000001",
     "name": "Validate and normalize marine",
-    "func": "if (msg.error) return null;\nconst data = msg.payload;\nif (msg.statusCode && (Number(msg.statusCode) < 200 || Number(msg.statusCode) >= 300)) {\n    node.error('Marine API returned HTTP ' + msg.statusCode, msg);\n    return null;\n}\nif (!data || typeof data !== 'object' || data.error || !data.hourly || !Array.isArray(data.hourly.time)) {\n    node.error('Marine API response is missing hourly forecast data', msg);\n    return null;\n}\nconst numeric = (value) => {\n    if (value === null || value === undefined || value === '') return null;\n    const result = Number(value);\n    return Number.isFinite(result) ? result : null;\n};\nconst nearest = (key) => {\n    const values = data.hourly[key];\n    if (!Array.isArray(values)) return null;\n    let best = null;\n    let bestDelta = Infinity;\n    const now = Date.now();\n    for (let i = 0; i < Math.min(values.length, data.hourly.time.length); i += 1) {\n        const value = numeric(values[i]);\n        const time = data.hourly.time[i];\n        const timestamp = typeof time === 'string' ? Date.parse(time) : NaN;\n        if (value === null || !Number.isFinite(timestamp)) continue;\n        const delta = Math.abs(timestamp - now);\n        if (delta < bestDelta) {\n            best = { value: value, time: time };\n            bestDelta = delta;\n        }\n    }\n    return best;\n};\nconst waterTemperature = nearest('sea_surface_temperature');\nconst seaLevel = nearest('sea_level_height_msl');\nconst waveHeight = nearest('wave_height');\nif (!waterTemperature && !seaLevel && !waveHeight) {\n    node.error('Marine API response contains no valid sea or wave measurements for this location', msg);\n    return null;\n}\nmsg.topic = 'environment/marine';\nmsg.payload = {\n    source: 'Open-Meteo Marine API',\n    status: waterTemperature && seaLevel ? 'OK' : 'PARTIAL',\n    fetchedAt: new Date().toISOString(),\n    location: { name: String(env.get('LOCATION_NAME') || 'Sassoon Dock, Mumbai'), latitude: Number(env.get('LOCATION_LATITUDE')), longitude: Number(env.get('LOCATION_LONGITUDE')) },\n    current: {\n        waterTemperatureC: waterTemperature ? waterTemperature.value : null,\n        seaLevelHeightMslM: seaLevel ? seaLevel.value : null,\n        waveHeightM: waveHeight ? waveHeight.value : null\n    },\n    sampleTimes: {\n        waterTemperature: waterTemperature ? waterTemperature.time : null,\n        seaLevel: seaLevel ? seaLevel.time : null,\n        waveHeight: waveHeight ? waveHeight.time : null\n    }\n};\nreturn msg;",
-    "outputs": 1,
+    "func": "if (msg.error) return null;\nconst data = msg.payload;\nif (msg.statusCode && (Number(msg.statusCode) < 200 || Number(msg.statusCode) >= 300)) {\n    node.error('Marine API returned HTTP ' + msg.statusCode, msg);\n    return null;\n}\nif (!data || typeof data !== 'object' || data.error || !data.hourly || !Array.isArray(data.hourly.time)) {\n    node.error('Marine API response is missing hourly forecast data', msg);\n    return null;\n}\nconst numeric = (value) => {\n    if (value === null || value === undefined || value === '') return null;\n    const result = Number(value);\n    return Number.isFinite(result) ? result : null;\n};\nconst nearest = (key) => {\n    const values = data.hourly[key];\n    if (!Array.isArray(values)) return null;\n    let best = null;\n    let bestDelta = Infinity;\n    const now = Date.now();\n    for (let i = 0; i < Math.min(values.length, data.hourly.time.length); i += 1) {\n        const value = numeric(values[i]);\n        const time = data.hourly.time[i];\n        const timestamp = typeof time === 'string' ? Date.parse(time) : NaN;\n        if (value === null || !Number.isFinite(timestamp)) continue;\n        const delta = Math.abs(timestamp - now);\n        if (delta < bestDelta) {\n            best = { value: value, time: time };\n            bestDelta = delta;\n        }\n    }\n    return best;\n};\nconst waterTemperature = nearest('sea_surface_temperature');\nconst seaLevel = nearest('sea_level_height_msl');\nconst waveHeight = nearest('wave_height');\nif (!waterTemperature && !seaLevel && !waveHeight) {\n    node.error('Marine API response contains no valid sea or wave measurements for this location', msg);\n    return null;\n}\nmsg.topic = 'environment/marine';\nmsg.payload = {\n    source: 'Open-Meteo Marine API',\n    status: waterTemperature && seaLevel ? 'OK' : 'PARTIAL',\n    fetchedAt: new Date().toISOString(),\n    location: { name: String(env.get('LOCATION_NAME') || 'Sassoon Dock, Mumbai'), latitude: Number(env.get('LOCATION_LATITUDE')), longitude: Number(env.get('LOCATION_LONGITUDE')) },\n    current: {\n        waterTemperatureC: waterTemperature ? waterTemperature.value : null,\n        seaLevelHeightMslM: seaLevel ? seaLevel.value : null,\n        waveHeightM: waveHeight ? waveHeight.value : null\n    },\n    sampleTimes: {\n        waterTemperature: waterTemperature ? waterTemperature.time : null,\n        seaLevel: seaLevel ? seaLevel.time : null,\n        waveHeight: waveHeight ? waveHeight.time : null\n    }\n};\nconst statusMsg = { topic: msg.topic, payload: msg.payload };\nreturn [msg, statusMsg];",
+    "outputs": 2,
     "timeout": 0,
     "noerr": 0,
     "initialize": "",
@@ -603,6 +606,9 @@
         "a10000000000000d",
         "b500000000000002",
         "a100000000000019"
+      ],
+      [
+        "f200000000000001"
       ]
     ]
   },
@@ -666,8 +672,8 @@
     "type": "function",
     "z": "a100000000000001",
     "name": "Format ingestion error",
-    "func": "const source = msg.source || 'environmental-api';\nconst reason = msg.error && msg.error.message ? msg.error.message : 'Request failed or response was invalid';\nmsg.topic = 'environment/' + source + '/error';\nmsg.payload = {\n    source: source,\n    status: 'ERROR',\n    error: String(reason),\n    failedAt: new Date().toISOString()\n};\nreturn msg;",
-    "outputs": 1,
+    "func": "const sourceNode = msg.error && msg.error.source ? msg.error.source : {};\nconst sourceId = String(sourceNode.id || '');\nconst sourceName = String(sourceNode.name || '');\nlet source = msg.source || 'environmental-api';\nif (sourceId === 'a100000000000004' || sourceId === 'a100000000000005' || sourceId === 'a100000000000006' || /weather/i.test(sourceName)) source = 'weather';\nif (sourceId === 'a10000000000000a' || sourceId === 'a10000000000000b' || sourceId === 'a10000000000000c' || /marine/i.test(sourceName)) source = 'marine';\nconst reason = msg.error && msg.error.message ? msg.error.message : 'Request failed or response was invalid';\nconst missing = (source === 'weather' || source === 'marine') && /missing|invalid|contains no valid|contains no daily/i.test(reason);\nmsg.topic = 'environment/' + source + '/error';\nmsg.payload = { source: source, status: missing ? 'MISSING' : 'ERROR', error: String(reason), failedAt: new Date().toISOString() };\nconst status = source === 'weather' || source === 'marine' ? { topic: msg.topic, payload: msg.payload } : null;\nreturn [msg, status];",
+    "outputs": 2,
     "timeout": 0,
     "noerr": 0,
     "initialize": "",
@@ -678,6 +684,9 @@
     "wires": [
       [
         "a100000000000011"
+      ],
+      [
+        "f200000000000001"
       ]
     ]
   },
@@ -1148,8 +1157,8 @@
     "type": "function",
     "z": "b400000000000001",
     "name": "Prepare telemetry dashboard values",
-    "func": "const p = msg.payload || {};\nconst time = Date.parse(p.observedAt);\nconst scalar = (topic, value) => Number.isFinite(value) ? { topic, payload: value } : null;\nconst point = (topic, value) => Number.isFinite(value) && Number.isFinite(time) ? { topic, payload: { time, value } } : null;\nreturn [\n    scalar('sensor-water-temperature', p.waterTemperatureC),\n    point('sensor-water-temperature', p.waterTemperatureC),\n    scalar('sensor-water-level', p.waterLevelM),\n    point('sensor-water-level', p.waterLevelM),\n    scalar('sensor-catch-count', p.catchCount),\n    scalar('sensor-battery-voltage', p.batteryVoltageV)\n];",
-    "outputs": 6,
+    "func": "const p = msg.payload || {};\nconst time = Date.parse(p.observedAt);\nconst scalar = (topic, value) => Number.isFinite(value) ? { topic, payload: value } : null;\nconst point = (topic, value) => Number.isFinite(value) && Number.isFinite(time) ? { topic, payload: { time, value } } : null;\nlet previousCatchCount = context.get('previousCatchCount');\nlet catchEvents = context.get('catchEventsLastHour') || [];\nlet newCatches = 0;\nif (Number.isInteger(p.catchCount) && Number.isFinite(time)) {\n    if (Number.isInteger(previousCatchCount) && p.catchCount >= previousCatchCount) {\n        newCatches = p.catchCount - previousCatchCount;\n    }\n    context.set('previousCatchCount', p.catchCount);\n    if (newCatches > 0) catchEvents.push({ time, count: newCatches });\n    const cutoff = time - 60 * 60 * 1000;\n    catchEvents = catchEvents.filter(event => event.time > cutoff && event.time <= time);\n    context.set('catchEventsLastHour', catchEvents);\n}\nconst catchesPerHour = catchEvents.reduce((total, event) => total + event.count, 0);\nreturn [\n    scalar('sensor-water-temperature', p.waterTemperatureC),\n    point('sensor-water-temperature', p.waterTemperatureC),\n    scalar('sensor-water-level', p.waterLevelM),\n    point('sensor-water-level', p.waterLevelM),\n    scalar('sensor-catch-count', p.catchCount),\n    scalar('sensor-battery-voltage', p.batteryVoltageV),\n    point('sensor-catches-per-hour', catchesPerHour)\n];",
+    "outputs": 7,
     "timeout": 0,
     "noerr": 0,
     "initialize": "",
@@ -1177,6 +1186,9 @@
       ],
       [
         "b500000000000027"
+      ],
+      [
+        "f100000000000001"
       ]
     ]
   },
@@ -2098,7 +2110,8 @@
     "y": 920,
     "wires": [
       [
-        "c100000000000002"
+        "c100000000000002",
+        "f200000000000003"
       ]
     ]
   },
@@ -2688,7 +2701,7 @@
     "order": 0,
     "width": 0,
     "height": 0,
-    "format": "#nrdb-ui-widget-b400000000000006 .nrdb-ui-markdown-content,\n#nrdb-ui-widget-b400000000000009 .nrdb-ui-markdown-content,\n#nrdb-ui-widget-b40000000000000c .nrdb-ui-markdown-content { padding: 4px 0 !important; }\n#nrdb-ui-widget-b400000000000006 .nrdb-ui-markdown-content p,\n#nrdb-ui-widget-b400000000000009 .nrdb-ui-markdown-content p,\n#nrdb-ui-widget-b40000000000000c .nrdb-ui-markdown-content p { font-size: 1.1rem !important; line-height: 1.4 !important; margin: 6px 0 !important; }\n#nrdb-ui-widget-d70000000000000c .nrdb-ui-markdown-content,\n#nrdb-ui-widget-d70000000000000d .nrdb-ui-markdown-content { padding: 0 !important; overflow: hidden !important; }\n#nrdb-ui-widget-d70000000000000c .nrdb-ui-markdown-content p,\n#nrdb-ui-widget-d70000000000000d .nrdb-ui-markdown-content p { margin: 0 !important; }\n\n#nrdb-ui-group-b400000000000005 .v-card-text { background: linear-gradient(135deg, #1b6ca8 0%, #3d9ed0 52%, #75d2e8 140%) !important; border-radius: 18px !important; }\n.overview-metric-card, .overview-metric-card.nrdb-ui-text { box-sizing: border-box !important; min-height: 76px !important; padding: 13px 15px !important; border: 1px solid rgba(255,255,255,.28) !important; border-radius: 16px !important; background: rgba(255,255,255,.15) !important; box-shadow: 0 8px 18px rgba(12, 42, 88, .16), inset 0 1px 0 rgba(255,255,255,.24) !important; overflow: hidden !important; backdrop-filter: blur(8px); }\n.overview-metric-card .nrdb-ui-text--row-spread { min-height: 48px !important; align-items: center !important; }\n.overview-metric-card .nrdb-ui-text--row-spread > div:first-child { color: #ffffff !important; font-size: .82rem !important; font-weight: 650 !important; line-height: 1.2 !important; }\n.overview-metric-card .nrdb-ui-text--row-spread > div:last-child { color: #ffffff !important; font-size: 1.35rem !important; font-weight: 800 !important; line-height: 1 !important; }\n@media (max-width: 700px) { .overview-metric-card, .overview-metric-card.nrdb-ui-text { min-height: 68px !important; padding: 11px 12px !important; } .overview-metric-card .nrdb-ui-text--row-spread > div:last-child { font-size: 1.2rem !important; } }\n#nrdb-ui-widget-b600000000000002 h1 { color: #ffffff !important; font-size: 2.1rem !important; font-weight: 750 !important; line-height: 1.15 !important; margin: 0 0 20px !important; }\n.overview-metric-card, .overview-metric-card * { color: #ffffff !important; }\n#nrdb-ui-widget-b500000000000026 { grid-column: 1 / -1 !important; justify-self: center !important; width: 100% !important; }\n@media (min-width: 768px) and (max-width: 1023px) { #nrdb-ui-widget-b500000000000026 { width: 44.444% !important; } }\n@media (min-width: 1024px) { #nrdb-ui-widget-b500000000000026 { width: 33.333% !important; } }\n",
+    "format": "#nrdb-ui-widget-b400000000000006 .nrdb-ui-markdown-content,\n#nrdb-ui-widget-b400000000000009 .nrdb-ui-markdown-content,\n#nrdb-ui-widget-b40000000000000c .nrdb-ui-markdown-content { padding: 4px 0 !important; }\n#nrdb-ui-widget-b400000000000006 .nrdb-ui-markdown-content p,\n#nrdb-ui-widget-b400000000000009 .nrdb-ui-markdown-content p,\n#nrdb-ui-widget-b40000000000000c .nrdb-ui-markdown-content p { font-size: 1.1rem !important; line-height: 1.4 !important; margin: 6px 0 !important; }\n#nrdb-ui-widget-d70000000000000c .nrdb-ui-markdown-content,\n#nrdb-ui-widget-d70000000000000d .nrdb-ui-markdown-content { padding: 0 !important; overflow: hidden !important; }\n#nrdb-ui-widget-d70000000000000c .nrdb-ui-markdown-content p,\n#nrdb-ui-widget-d70000000000000d .nrdb-ui-markdown-content p { margin: 0 !important; }\n\n#nrdb-ui-group-b400000000000005 .v-card-text { background: linear-gradient(135deg, #1b6ca8 0%, #3d9ed0 52%, #75d2e8 140%) !important; border-radius: 18px !important; }\n.overview-metric-card, .overview-metric-card.nrdb-ui-text { box-sizing: border-box !important; min-height: 76px !important; padding: 13px 15px !important; border: 1px solid rgba(255,255,255,.28) !important; border-radius: 16px !important; background: rgba(255,255,255,.15) !important; box-shadow: 0 8px 18px rgba(12, 42, 88, .16), inset 0 1px 0 rgba(255,255,255,.24) !important; overflow: hidden !important; backdrop-filter: blur(8px); }\n.overview-metric-card .nrdb-ui-text--row-spread { min-height: 48px !important; align-items: center !important; }\n.overview-metric-card .nrdb-ui-text--row-spread > div:first-child { color: #ffffff !important; font-size: .82rem !important; font-weight: 650 !important; line-height: 1.2 !important; }\n.overview-metric-card .nrdb-ui-text--row-spread > div:last-child { color: #ffffff !important; font-size: 1.35rem !important; font-weight: 800 !important; line-height: 1 !important; }\n@media (max-width: 700px) { .overview-metric-card, .overview-metric-card.nrdb-ui-text { min-height: 68px !important; padding: 11px 12px !important; } .overview-metric-card .nrdb-ui-text--row-spread > div:last-child { font-size: 1.2rem !important; } }\n#nrdb-ui-widget-b600000000000002 h1 { color: #ffffff !important; font-size: 28px !important; font-weight: 750 !important; line-height: 1.15 !important; margin: 0 0 20px !important; }\n.overview-metric-card, .overview-metric-card * { color: #ffffff !important; }\n#nrdb-ui-widget-b500000000000026 { grid-column: 1 / -1 !important; justify-self: center !important; width: 100% !important; }\n@media (min-width: 768px) and (max-width: 1023px) { #nrdb-ui-widget-b500000000000026 { width: 44.444% !important; } }\n@media (min-width: 1024px) { #nrdb-ui-widget-b500000000000026 { width: 33.333% !important; } }\n",
     "storeOutMessages": false,
     "resendOnRefresh": false,
     "templateScope": "site:style",
@@ -2919,6 +2932,156 @@
       [
         "e900000000000018"
       ]
+    ]
+  },
+  {
+    "id": "f100000000000001",
+    "type": "ui-chart",
+    "z": "b400000000000001",
+    "group": "b600000000000004",
+    "name": "Rolling hourly catch rate",
+    "label": "Catches per hour (rolling 60 minutes)",
+    "order": 4,
+    "chartType": "line",
+    "category": "topic",
+    "categoryType": "msg",
+    "xAxisLabel": "Time",
+    "xAxisProperty": "time",
+    "xAxisPropertyType": "property",
+    "xAxisType": "time",
+    "xAxisFormat": "",
+    "xAxisFormatType": "auto",
+    "xmin": "",
+    "xmax": "",
+    "yAxisLabel": "Catches per hour",
+    "yAxisProperty": "value",
+    "yAxisPropertyType": "property",
+    "ymin": 0,
+    "ymax": "",
+    "bins": 10,
+    "action": "append",
+    "stackSeries": false,
+    "pointShape": "circle",
+    "pointRadius": 3,
+    "showLegend": false,
+    "removeOlder": 24,
+    "removeOlderUnit": "3600",
+    "removeOlderPoints": "",
+    "colors": [
+      "#087e8b",
+      "#f2a541"
+    ],
+    "textColor": [
+      "#666666"
+    ],
+    "textColorDefault": true,
+    "gridColor": [
+      "#e5e5e5"
+    ],
+    "gridColorDefault": true,
+    "width": 12,
+    "height": 7,
+    "className": "",
+    "interpolation": "linear",
+    "x": 1110,
+    "y": 1060,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "f200000000000001",
+    "type": "link out",
+    "z": "a100000000000001",
+    "name": "Weather and marine status feed",
+    "mode": "link",
+    "links": [
+      "f200000000000002"
+    ],
+    "x": 1000,
+    "y": 480,
+    "wires": []
+  },
+  {
+    "id": "f200000000000002",
+    "type": "link in",
+    "z": "b400000000000001",
+    "name": "API status updates",
+    "links": [
+      "f200000000000001"
+    ],
+    "x": 160,
+    "y": 860,
+    "wires": [
+      [
+        "f200000000000003"
+      ]
+    ]
+  },
+  {
+    "id": "f200000000000003",
+    "type": "function",
+    "z": "b400000000000001",
+    "name": "Track API health and freshness",
+    "func": "const now = Date.now();\nconst intervalInput = Number(msg.payload);\nlet intervalSeconds = context.get('apiIntervalSeconds') || 60;\nif (Number.isFinite(intervalInput) && [15, 30, 60, 300, 900].includes(intervalInput) && !String(msg.topic || '').startsWith('environment/')) {\n    intervalSeconds = intervalInput;\n    context.set('apiIntervalSeconds', intervalSeconds);\n}\nconst state = context.get('apiHealth') || {\n    weather: { name: 'Weather forecast', lastSuccessAt: null, lastAttemptAt: null, error: null, missing: [] },\n    marine: { name: 'Marine forecast', lastSuccessAt: null, lastAttemptAt: null, error: null, missing: [] }\n};\nconst topic = String(msg.topic || '');\nconst payload = msg.payload || {};\nlet source = topic.includes('/weather') ? 'weather' : topic.includes('/marine') ? 'marine' : null;\nif (source && topic.endsWith('/error')) {\n    state[source].lastAttemptAt = Date.parse(payload.failedAt) || now;\n    if (payload.status === 'MISSING') {\n        state[source].missing = [String(payload.error || 'Required values are missing or invalid')];\n        state[source].error = null;\n    } else {\n        state[source].error = String(payload.error || 'Request failed or response was invalid');\n    }\n} else if (source && payload.current && payload.fetchedAt) {\n    const current = payload.current;\n    const missing = [];\n    if (source === 'weather') {\n        if (!Number.isFinite(current.airTemperatureC)) missing.push('air temperature');\n        if (!Number.isFinite(current.windSpeedKmh)) missing.push('wind speed');\n        const rainfall = Array.isArray(payload.rainfallForecast) ? payload.rainfallForecast : [];\n        if (rainfall.length < 5) missing.push('rainfall forecast (' + rainfall.length + ' of 5 days)');\n    } else {\n        if (!Number.isFinite(current.waterTemperatureC)) missing.push('sea-surface temperature');\n        if (!Number.isFinite(current.seaLevelHeightMslM)) missing.push('sea level');\n        if (!Number.isFinite(current.waveHeightM)) missing.push('wave height');\n    }\n    const fetchedAt = Date.parse(payload.fetchedAt) || now;\n    state[source].lastSuccessAt = fetchedAt;\n    state[source].lastAttemptAt = fetchedAt;\n    state[source].missing = missing;\n    state[source].error = null;\n}\ncontext.set('apiHealth', state);\nconst staleAfterMs = Math.max(intervalSeconds * 2500, 120000);\nconst formatStatus = (item) => {\n    const ageMs = item.lastSuccessAt === null ? null : Math.max(0, now - item.lastSuccessAt);\n    let status = 'waiting';\n    if (ageMs !== null && ageMs > staleAfterMs) status = 'stale';\n    else if (item.error) status = 'error';\n    else if (item.missing.length) status = 'missing';\n    else if (item.lastSuccessAt !== null) status = 'current';\n    let detail = 'Waiting for the first successful API response.';\n    if (item.lastSuccessAt !== null) detail = 'Last successful update: ' + new Date(item.lastSuccessAt).toLocaleTimeString();\n    if (status === 'missing') detail = 'Missing values: ' + item.missing.join(', ') + '. ' + detail;\n    if (item.error) detail = 'Latest request failed: ' + item.error + (item.lastSuccessAt !== null ? ' Last successful update: ' + new Date(item.lastSuccessAt).toLocaleTimeString() : '');\n    if (status === 'stale') detail = 'No successful update for ' + Math.floor(ageMs / 60000) + ' min. ' + (item.error ? 'Latest request failed: ' + item.error : 'Check the API connection.');\n    return { name: item.name, status: status, detail: detail, lastSuccessAt: item.lastSuccessAt ? new Date(item.lastSuccessAt).toISOString() : null };\n};\nmsg.topic = 'dashboard/api-health';\nmsg.payload = { weather: formatStatus(state.weather), marine: formatStatus(state.marine), staleAfterSeconds: Math.round(staleAfterMs / 1000), checkedAt: new Date(now).toISOString() };\nreturn msg;",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "context.set(\"apiIntervalSeconds\", 60);",
+    "finalize": "",
+    "libs": [],
+    "x": 400,
+    "y": 860,
+    "wires": [
+      [
+        "f200000000000005"
+      ]
+    ]
+  },
+  {
+    "id": "f200000000000004",
+    "type": "inject",
+    "z": "b400000000000001",
+    "name": "Refresh API status display",
+    "props": [
+      {
+        "p": "payload"
+      },
+      {
+        "p": "topic",
+        "vt": "str"
+      }
+    ],
+    "repeat": "30",
+    "crontab": "",
+    "once": true,
+    "onceDelay": "2",
+    "topic": "dashboard/status/heartbeat",
+    "payload": "",
+    "payloadType": "date",
+    "x": 160,
+    "y": 920,
+    "wires": [
+      [
+        "f200000000000003"
+      ]
+    ]
+  },
+  {
+    "id": "f200000000000005",
+    "type": "ui-template",
+    "z": "b400000000000001",
+    "group": "c100000000000005",
+    "name": "API data status",
+    "order": 6,
+    "width": 12,
+    "height": 3,
+    "format": "<style>\n.api-health-panel { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }\n.api-health-item { box-sizing:border-box; min-width:0; padding:14px 16px; border-radius:16px; color:#fff; background:linear-gradient(135deg,#1b6ca8 0%,#3d9ed0 52%,#75d2e8 140%); box-shadow:0 8px 18px rgba(12,42,88,.16),inset 0 1px 0 rgba(255,255,255,.22); }\n.api-health-item.error,.api-health-item.stale { background:linear-gradient(135deg,#0a1026 0%,#303746 52%,#5b6370 140%); }\n.api-health-item.missing { background:linear-gradient(135deg,#081b4b 0%,#143b8d 52%,#2e237c 140%); }\n.api-health-title { display:flex; align-items:center; justify-content:space-between; gap:8px; }\n.api-health-heading { margin:0; color:#fff; font-size:clamp(18px,2.3vw,21px); font-weight:750; line-height:1.25; }\n.api-health-badge { padding:4px 9px; border-radius:999px; background:rgba(255,255,255,.17); font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }\n.api-health-detail { margin-top:8px; color:rgba(255,255,255,.88); font-size:.86rem; line-height:1.35; overflow-wrap:anywhere; }\n@media(max-width:600px) { .api-health-panel { grid-template-columns:1fr; } }\n</style>\n<div class=\"api-health-panel\" v-if=\"msg.payload\">\n  <div v-for=\"item in [msg.payload.weather, msg.payload.marine]\" :key=\"item.name\" class=\"api-health-item\" :class=\"item.status\">\n    <div class=\"api-health-title\"><h2 class=\"api-health-heading\">{{ item.name }}</h2><span class=\"api-health-badge\">{{ item.status === 'current' ? 'Current' : item.status === 'missing' ? 'Missing values' : item.status === 'error' ? 'Request failed' : item.status === 'stale' ? 'Stale data' : 'Waiting' }}</span></div>\n    <div class=\"api-health-detail\">{{ item.detail }}</div>\n  </div>\n</div>\n<div v-else class=\"api-health-panel\"><div class=\"api-health-item\">Waiting for API status…</div></div>",
+    "templateScope": "local",
+    "className": "",
+    "x": 470,
+    "y": 920,
+    "wires": [
+      []
     ]
   }
 ]

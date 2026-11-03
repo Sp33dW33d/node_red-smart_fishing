@@ -2,6 +2,7 @@ services:
   node-red:
     image: nodered/node-red:5.0.9
     restart: unless-stopped
+    entrypoint: ["/bin/sh", "/data/start.sh"]
     ports:
       - "127.0.0.1:${PORT:-1880}:1880"
     environment:

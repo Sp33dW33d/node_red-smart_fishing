@@ -1,38 +1,40 @@
 # Technology Stack
 
-This document records the current Phase 2 API flow and seven-day history cache, Phase 3 MQTT broker/publisher/ingestion flow, and Phase 4 Dashboard 2 pages and live metrics. MQTT telemetry and Open-Meteo responses feed dashboard summary values, gauges, and charts.
+This document records the implemented stack through Phase 5: Open-Meteo ingestion and history cache, MQTT simulation and ingestion, fishing-conditions recommendations, and the FlowFuse Dashboard.
 
 ## Implemented stack
 
 | Component | Current choice | Use |
 |---|---|---|
 | Flow runtime | Node-RED `5.0.9` container image | Runs the exported flow; image tag is pinned in `compose.yaml`. |
-| Runtime language | JavaScript in Function nodes | Builds API URLs and validates/normalizes response objects. Node.js is supplied by the base image. |
-| Weather data | Open-Meteo Forecast API | Current air temperature and wind speed, plus five daily rainfall values. |
-| Marine data | Open-Meteo Marine API | Hourly sea-surface temperature, sea-level height, and wave height. |
-| Historical cache worker | Python `3.13.18` standard library | Maintains seven completed UTC days of weather and marine summaries in `cache/history-7d.json`; only missing date/source data are fetched. |
-| Runtime configuration | Docker Compose and `.env` | Provides location, endpoints, timezone, credential secret, and IPv4 setting. |
-| MQTT broker | Eclipse Mosquitto `2.1.2-alpine` | Phase 3.1 broker service; persistent state uses a Docker named volume. |
-| MQTT publisher | Python `3.13.18` container and `paho-mqtt==2.1.0` | Compose `telemetry-simulator` service runs `scripts/simulate-mqtt.py` and publishes to Mosquitto every five seconds. |
-| Dashboard UI package | FlowFuse Dashboard `@flowfuse/node-red-dashboard` `1.34.1` | Pinned in `node-red/package.json`; compatible with the selected Node-RED runtime. |
-| Node types | Node-RED built-ins | Inject, Function, HTTP Request, MQTT In, Catch, and Debug. |
-| Dashboard nodes | FlowFuse Dashboard 2 | One UI base/theme, three pages, ten groups, six Markdown widgets, eight gauges, eight text values, nine charts, and cross-tab Link nodes. |
+| Runtime language | JavaScript in Node-RED Function nodes | Builds API requests and validates, normalizes, and routes data. Node.js comes from the base image. |
+| Weather data | Open-Meteo Forecast API | Current air temperature and wind speed plus five daily rainfall forecast values. |
+| Marine data | Open-Meteo Marine API | Hourly sea-surface temperature, sea level, and wave height. |
+| Historical cache | Python `3.13.18` standard library | Maintains daily weather/marine summaries for seven completed UTC days in `cache/history-7d.json`; requests missing date/source ranges only. |
+| Runtime configuration | Docker Compose and ignored `.env` | Provides location, API endpoints, timezone, credential secret, ports, MQTT settings, and cache interval. |
+| MQTT broker | Eclipse Mosquitto `2.1.2-alpine` | Local broker with persistent state in a Docker named volume. |
+| MQTT publisher | Python `3.13.18` and `paho-mqtt==2.1.0` | `telemetry-simulator` publishes synthetic sensor readings and weather-adjusted catch counts every five seconds. |
+| Dashboard package | FlowFuse Dashboard `@flowfuse/node-red-dashboard` `1.34.1` | Pinned in `node-red/package.json` and `package-lock.json`. |
+| Core flow nodes | Node-RED built-ins | Inject, Function, HTTP Request, MQTT In, Catch, Debug, and Link nodes. |
+| Dashboard flow nodes | FlowFuse Dashboard 2 | Three pages, eleven groups, ten charts, eight gauges, eight text values, three dropdowns, one switch, three templates, and fourteen Markdown widgets. |
 
-MQTT In is supplied by the Node-RED core nodes. FlowFuse Dashboard is installed as a pinned Node-RED user dependency. Its Overview, Environment, and Water Conditions pages are in `flows/smart-fishing.json`. Live API data and MQTT simulator samples feed the text values, gauges, rainfall forecast chart, and sensor trend charts. The history-cache service exposes its local cache to Node-RED at `history-cache:8080/history`; six additional charts display seven-day weather and marine trends.
+Dashboard chart count includes a five-day rainfall chart, two one-hour sensor charts, six seven-day history charts, and a rolling 60-minute catches-per-hour chart. Counts describe the current `flows/smart-fishing.json` export and may change as the UI evolves.
 
-## Planned implementation
+The dashboard pages are Overview, Environment, and Water Conditions. The Overview presents location details, API health/freshness status, independent API and sensor-display intervals, a fishing-condition recommendation, a dashboard-only preview control, and current metrics. Environment presents weather readings and seven-day weather history. Water Conditions presents marine readings, MQTT telemetry, sensor trends, catch rate, and seven-day marine history.
 
-| Component | Planned use | Phase |
-|---|---|---|
-| Show error, missing-value, and stale-data states | Make data quality visible in the dashboard | 4.8 |
+## Dependency installation
 
-Select and pin versions when planned dependencies are implemented. Draft dependency names and versions are not current requirements.
+The Node-RED service starts through `node-red/start.sh`, which installs production dependencies from the pinned `node-red/package-lock.json` into the mounted `/data` directory before executing the Node-RED entrypoint. This supports fresh as well as existing runtime volumes. The simulator image installs its pinned client from `scripts/requirements.txt`. The history-cache service uses Python's standard library and has no third-party package requirements.
 
 ## Deployment details
 
 - Docker Compose v2 is used; the Compose Specification does not require a legacy top-level `version` field.
-- The Node-RED editor is published to loopback only (`127.0.0.1`) using configurable host `PORT` and container port `1880`.
-- Flow, settings, and runtime data use bind mounts under `node-red/` and `flows/`.
-- Historical API summaries use a `./cache:/cache` bind mount, separate from Node-RED flow/runtime state; the generated JSON cache is ignored by Git.
-- `NODE_RED_FORCE_IPV4=true` configures Node.js HTTPS to prefer IPv4 for the verified Docker/WSL networking case.
-- Current Open-Meteo requests use HTTPS and require no project API key.
+- The Node-RED editor is published to loopback (`127.0.0.1`) on configurable host `PORT` and container port `1880`.
+- Node-RED runtime state and flows use bind mounts under `node-red/` and `flows/`.
+- The history cache uses a separate `./cache:/cache` bind mount; generated cache JSON is ignored by Git.
+- Mosquitto configuration is mounted read-only, while broker state uses a named volume. The host listener is loopback-bound; anonymous access is for local assignment use only.
+- `NODE_RED_FORCE_IPV4=true` configures Node.js HTTPS to prefer IPv4 for Docker/WSL networking.
+- Open-Meteo requests use HTTPS and require no API key for the configured endpoints.
+- The history-cache API listens on port 8080 inside the Compose network and is not exposed on a host port.
+
+Runtime image and dependency versions are pinned in `compose.yaml`, `node-red/package.json`, `node-red/package-lock.json`, and `scripts/requirements.txt`.

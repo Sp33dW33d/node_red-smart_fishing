@@ -37,14 +37,18 @@ This checklist tracks repository state. A task is complete only when implementat
 - [x] 4.5 Connect normalized MQTT telemetry to the Water Conditions and Overview dashboard widgets; verify live simulator values.
 - [x] 4.6 Display combined weather, marine, and telemetry summary values on the Overview dashboard.
 - [x] 4.7 Add separate selectable API polling and sensor display intervals; API options are 15 seconds, 30 seconds, 1 minute, 5 minutes, or 15 minutes, while sensor display defaults to every simulator message and can be slowed independently.
-- [ ] 4.8 Show API failures, missing values, and stale-data state in the UI.
-- [ ] 4.9 Display and verify cached seven-day weather and marine history metrics in dashboard charts.
+- [x] 4.8 Show weather and marine API status in the dashboard, including failed requests, missing or invalid values, last successful update times, and stale-data alerts based on the selected API polling interval.
+- [x] 4.9 Display cached seven-day weather and marine history metrics in dashboard charts.
 - [x] 4.10 Build the backend fishing-conditions recommendation flow and publish a condition status, score, reasons, and catch-rate multiplier over MQTT.
-- [ ] 4.11 Add the fishing-conditions recommendation and explanation to the dashboard.
+- [x] 4.11 Add the fishing-conditions recommendation and explanation to the dashboard, including a dashboard-only manual preview for Favorable, Caution, and Poor states.
+- [x] 4.12 Add a rolling catches-per-hour chart to Sensor trends using cumulative simulator catch-count changes.
 
 ## Phase 5: Packaging and release checks
 
-- [ ] 5.1 Export the complete working flow to `flows/smart-fishing.json`.
-- [ ] 5.2 Follow setup documentation on a clean environment and record the result.
-- [ ] 5.3 Check tracked files for secrets, ignored runtime data, and stack consistency.
-- [ ] 5.4 Update specifications and architecture documentation to describe the completed application.
+- [x] 5.1 Export the complete working flow to `flows/smart-fishing.json`.
+- [x] 5.2 Follow setup documentation on a clean environment and record the result.
+  - Clean setup verified 2026-11-03 in an isolated fresh Compose project. Initial verification exposed that a fresh Node-RED `/data` volume did not install the pinned Dashboard package; startup now installs from `package-lock.json`. Rerun passed: all four services started, Node-RED connected to Mosquitto, the simulator published telemetry, the history cache populated all 7/7 weather and marine days, and all three dashboard routes returned HTTP 200.
+- [x] 5.3 Check tracked files for secrets, ignored runtime data, and stack consistency.
+  - Audit verified 2026-11-03: no tracked secrets found; runtime data is ignored, and Compose settings and dependency pins align. Added the cache interval to `.env.example` and ignored the generated flow backup.
+- [x] 5.4 Reconcile the root README and all project documents in `docs/` with the completed application, including current requirements, architecture, dependencies, dashboard features, setup, and verification status.
+  - Reconciled the README and `docs/` with the current services, flows, dependencies, dashboard, and setup; checked for stale phase claims and whitespace errors.

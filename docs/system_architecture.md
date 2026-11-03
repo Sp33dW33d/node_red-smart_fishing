@@ -1,46 +1,50 @@
 # System Architecture
 
-## Current stack (Phase 2 API flow and history cache, Phase 3 MQTT path, Phase 4 live dashboard)
+## Current stack
 
 ```text
 Docker Compose
 ├── Node-RED 5.0.9 (host 127.0.0.1:<PORT> → container 1880)
-│   ├── Weather and marine API flows → normalized values/errors → Debug and Dashboard
-│   ├── MQTT In → validate and normalize sensor telemetry/errors → Debug and Dashboard
-│   └── FlowFuse Dashboard 2 → Overview, Environment, Water Conditions pages
+│   ├── Weather and marine API flows → validate/normalize → Debug, recommendation, dashboard
+│   ├── MQTT telemetry and condition flows → validate/normalize → Debug and dashboard
+│   └── FlowFuse Dashboard → Overview, Environment, Water Conditions
 ├── History cache (Python 3.13 standard library)
-│   └── Open-Meteo history on cache miss → ./cache/history-7d.json (seven completed UTC days)
+│   └── Open-Meteo history → ./cache/history-7d.json (seven completed UTC days)
 ├── Telemetry simulator (Python 3.13, paho-mqtt)
-│   └── MQTT QoS 1 publish → smartfishing/demo-01/telemetry
+│   └── QoS 1 telemetry publish / conditions subscribe
 └── Mosquitto 2.1.2 (host 127.0.0.1:<MQTT_PORT> → container 1883)
     └── persistent broker state (Docker named volume)
 ```
 
-The Mosquitto listener is reachable to Compose services as `mosquitto:1883` and is published to the host on loopback only. Anonymous MQTT access is enabled for local assignment development. Compose starts the `telemetry-simulator` publisher with the broker; it sends a QoS 1 message every five seconds to `${MQTT_TOPIC_PREFIX}/${MQTT_DEVICE_ID}/telemetry` (defaults `smartfishing/demo-01/telemetry`) and subscribes to `MQTT_CONDITIONS_TOPIC` (default `smartfishing/conditions`). FlowFuse Dashboard 2.0 serves the Overview, Environment, and Water Conditions pages at `/dashboard/overview`, `/dashboard/environment`, and `/dashboard/water-conditions`. The Overview page has independent API polling and sensor display selectors. API polling refreshes weather and marine requests; sensor display throttling only controls forwarding of already-ingested MQTT messages to dashboard widgets. Dashboard Link nodes bridge the source flow tab to the dashboard tab. The Environment page separates the weather header, weather gauges, and rainfall chart within the forecast display. The Water Conditions page has a separate introduction, a Marine forecast panel with three gauges, a Sensor telemetry readings panel, and a Sensor trends panel containing the water-temperature and water-level charts. Weather feeds the air-temperature and wind gauges, overview values, rainfall bar chart, and rainfall total. Marine feeds sea-temperature, sea-level, and wave-height gauges plus overview values. MQTT telemetry feeds sensor gauges, catch-count summaries, and one-hour trend charts. The recommendation function stores the latest normalized weather and marine payloads, scores wind, waves, rainfall, and sea-surface temperature, and publishes a downstream condition message with a catch-rate multiplier. Missing-value, stale-data, and API-error states are planned for Phase 4.8.
+The Compose stack has four services: Node-RED, Mosquitto, the telemetry simulator, and the history cache. Node-RED and the MQTT listener bind to host loopback. MQTT clients inside Compose use `mosquitto:1883`; anonymous MQTT access is enabled for local assignment development only.
 
-The Phase 3.2 publisher image installs `paho-mqtt==2.1.0` from `scripts/requirements.txt`. The Compose service publishes to `smartfishing/demo-01/telemetry` every five seconds with QoS 1 and no retained message, and subscribes to `smartfishing/conditions`. Each JSON payload contains `device_id`, a UTC `timestamp`, `water_temperature_c`, `water_level_m`, cumulative `catch_count`, `conditions_status`, `catch_rate_multiplier`, and `battery_voltage_v`. The simulator models catch arrivals using a time-based rate adjusted by the latest recommendation; all values remain synthetic.
+The simulator publishes a non-retained QoS 1 message every five seconds to `${MQTT_TOPIC_PREFIX}/${MQTT_DEVICE_ID}/telemetry` (default `smartfishing/demo-01/telemetry`) and subscribes to `MQTT_CONDITIONS_TOPIC` (default `smartfishing/conditions`). Dashboard Link nodes bridge the source flow tab to dashboard widgets.
 
-The Node-RED MQTT In node subscribes at QoS 1 to `${MQTT_TOPIC_PREFIX}/+/telemetry` and parses JSON. Its Function node requires a non-empty device ID, parseable timestamp, finite numeric measurements, and a non-negative integer catch count. Valid messages use `msg.topic = sensor/telemetry/<device_id>` and a normalized payload with `source`, `status`, `deviceId`, `observedAt`, `receivedAt`, `waterTemperatureC`, `waterLevelM`, `catchCount`, and `batteryVoltageV`. MQTT JSON parse/validation errors are tagged `source: mqtt` and routed to the shared ingestion error output.
+## Dashboard behavior
 
-Weather and marine paths are Inject → request builder → HTTP Request → validation/normalization → Debug. Their Catch nodes format failures for Debug.
+FlowFuse Dashboard serves `/dashboard/overview`, `/dashboard/environment`, and `/dashboard/water-conditions`.
 
-## Rolling API history cache
+- **Overview:** configured location and coordinates, API status cards, selectable API polling and sensor display intervals, a fishing-conditions card, a dashboard-only condition preview, and current weather/marine/telemetry metric cards. API status is waiting, current, missing, request failed, or stale. Last-success time is shown when available; stale threshold is the greater of two minutes or 2.5 times the selected polling interval.
+- **Environment:** air-temperature and wind gauges, five-day rainfall forecast, and seven-day charts for daily mean air temperature, maximum wind speed, and rainfall.
+- **Water Conditions:** marine forecast gauges, sensor gauges and catch count, one-hour water-temperature and water-level charts, a rolling 60-minute catches-per-hour chart, and seven-day charts for daily mean sea-surface temperature, mean sea level, and mean wave height.
 
-The Compose `history-cache` service stores daily Open-Meteo Forecast API and Marine API summaries in `cache/history-7d.json`. It maintains the seven completed UTC calendar days in ascending date order. At each hourly check it removes expired dates, requests only a missing date/source range, merges successful results, and leaves cached weather or marine data intact if the other API is unavailable. A location or schema change invalidates the previous cache. The service exposes `GET /history` on internal port 8080; it is available to other Compose services and is not published to the host. Node-RED reads this endpoint every minute and sends the weather and marine daily summaries to six history charts. Cached values are summaries of archived model forecasts, not measured harbor observations.
+API polling (15 seconds, 30 seconds, 1 minute, 5 minutes, or 15 minutes; default 1 minute) refreshes weather and marine requests together and immediately fetches after a selection change. Sensor display cadence is separate; the default forwards every simulator message (about five seconds), while slower settings throttle only dashboard delivery and do not change MQTT ingestion.
 
-Weather history charts show daily mean air temperature, maximum wind speed, and rainfall total. Marine history charts show daily mean sea-surface temperature, mean sea level, and mean wave height. Summary text reports the date range, cache update time, data coverage, and seven-day aggregates. Weather records contain daily mean/min/max air temperature, maximum wind speed, rain, and precipitation. Marine records aggregate hourly sea-surface temperature, mean-sea-level height, and wave height into per-day mean/min/max/sample counts. UTC is used consistently for the cache keys.
+Weather and marine readings are forecast/model outputs, not physical harbor measurements. MQTT sensor readings and catch counts are generated by the local simulator.
 
-## Request and schedule behavior
+## MQTT telemetry and recommendation
 
-- Both Inject nodes run shortly after deployment. The Overview scheduler then refreshes both APIs at the selected dashboard interval (default 60 seconds) and triggers an immediate fetch whenever the selection changes.
-- Weather requests specify configured latitude/longitude, current `temperature_2m` and `wind_speed_10m`, daily `rain_sum`, five forecast days, automatic timezone, Celsius, and km/h.
-- Marine requests specify configured latitude/longitude and hourly `sea_surface_temperature`, `sea_level_height_msl`, and `wave_height` for two forecast days.
-- Endpoints, location name, and coordinates come from environment variables passed by `compose.yaml`. The normalized weather location object feeds the Overview introduction, so the displayed name and coordinates follow `LOCATION_NAME`, `LOCATION_LATITUDE`, and `LOCATION_LONGITUDE`; the linked weather-normalization flow is the backend source.
-- `NODE_RED_FORCE_IPV4` optionally sets the Node.js global HTTPS agent to IPv4 family 4; it is enabled by default for the verified Docker/WSL networking setup.
+The simulator installs `paho-mqtt==2.1.0` from `scripts/requirements.txt`. It publishes every five seconds at QoS 1 without retained messages. Its JSON payload contains `device_id`, UTC `timestamp`, `water_temperature_c`, `water_level_m`, cumulative `catch_count`, `conditions_status`, `catch_rate_multiplier`, and `battery_voltage_v`.
 
-## Normalized output contracts
+Node-RED subscribes at QoS 1 to `${MQTT_TOPIC_PREFIX}/+/telemetry`. It validates a non-empty device ID, parseable timestamp, finite numeric measurements, and a non-negative integer catch count. Valid messages use `msg.topic = sensor/telemetry/<device_id>` and a normalized payload with `source`, `status`, `deviceId`, `observedAt`, `receivedAt`, `waterTemperatureC`, `waterLevelM`, `catchCount`, and `batteryVoltageV`. JSON parsing and schema errors are tagged `source: mqtt` and routed to the shared ingestion error output.
 
-Weather uses `msg.topic = environment/weather` and a payload shaped as:
+The recommendation function stores the latest normalized weather and marine payloads, scores wind speed, wave height, the first daily rainfall forecast value, and sea-surface temperature, then publishes a condition message. Status thresholds are favorable (score >=75), caution (>=45), and poor (<45). The message carries status, score from 0 to 100, reasons, location, generated time, input readings, and catch-rate multiplier (1.5 favorable, 0.7 caution, 0.2 poor). The simulator uses a time-based Poisson arrival process at a neutral baseline of 0.6 expected catches per minute adjusted by the latest multiplier. The manual preview changes only the dashboard display; it does not change this backend message or simulator input.
+
+## Forecast requests and normalized contracts
+
+Weather and marine flows run after deployment and at the dashboard-selected interval. Request construction, HTTP transport, normalization, and error handling are separate flow steps. Endpoints, timezone, location name, and coordinates are passed from Compose environment variables. `NODE_RED_FORCE_IPV4=true` configures Node.js HTTPS to prefer IPv4 for Docker/WSL networking.
+
+Weather requests use configured coordinates, current `temperature_2m` and `wind_speed_10m`, daily `rain_sum`, five forecast days, automatic timezone, Celsius, and km/h. Normalized weather uses `msg.topic = environment/weather`:
 
 ```json
 {
@@ -54,9 +58,9 @@ Weather uses `msg.topic = environment/weather` and a payload shaped as:
 }
 ```
 
-`rainfallForecast` contains up to five entries. `observedAt` is supplied by the provider; `fetchedAt` is assigned during normalization.
+`rainfallForecast` contains up to five entries. The location fields come from `LOCATION_NAME`, `LOCATION_LATITUDE`, and `LOCATION_LONGITUDE`; `fetchedAt` is assigned during normalization.
 
-Marine uses `msg.topic = environment/marine` and a payload shaped as:
+Marine requests use configured coordinates and hourly `sea_surface_temperature`, `sea_level_height_msl`, and `wave_height` for two forecast days. Normalized marine uses `msg.topic = environment/marine`:
 
 ```json
 {
@@ -77,10 +81,16 @@ Marine uses `msg.topic = environment/marine` and a payload shaped as:
 }
 ```
 
-The numeric values are examples from a verified run, not constants. For each marine variable, the flow selects the hourly value whose timestamp is nearest to normalization time. Marine status is `OK` when temperature and sea level are present, `PARTIAL` when at least one measurement exists but one of those two is missing. Missing measurements are `null`.
+Marine values are selected from the hourly sample nearest to normalization time. Status is `OK` when temperature and sea level are present, `PARTIAL` when at least one is available but one of those required readings is missing. Missing measurements are `null`. Example numbers are not constants.
 
-Errors use `msg.topic = environment/<source>/error` and include `source`, `status: ERROR`, `error`, and `failedAt`. `<source>` is `weather` or `marine` after request construction, and `environmental-api` if configuration fails before the source is set. Non-success HTTP responses, API error objects, missing required structures, invalid numeric values, and invalid location configuration are sent through the Catch/error path. Errors are visible in Debug; user-facing error, missing-value, and stale-data states are not implemented yet.
+Errors use `msg.topic = environment/<source>/error` and contain `source`, `status`, `error`, and `failedAt`. `<source>` is `weather` or `marine` after request construction, and `environmental-api` if configuration fails before the source is set. HTTP failures, provider error objects, missing required structures, invalid numbers, and invalid location configuration are routed through Catch/error handling and Debug. API-health processing tracks last attempt, last successful response, error, and missing values for dashboard display.
 
-## Later phases
+## Seven-day history cache
 
-The live MQTT path was verified with simulator samples, including values displayed in the dashboard gauges and charts; malformed-payload error handling remains to be checked. The three Dashboard 2 pages and their normalized data connections are deployed and verified. Phase 4.8 will present missing, stale, and failed data states. Earlier draft examples are not active interfaces.
+The `history-cache` service stores daily Open-Meteo Forecast API and Marine API summaries in `cache/history-7d.json`. The window contains the seven completed UTC calendar days in ascending date order. The worker checks hourly by default (configurable with `HISTORY_CACHE_INTERVAL_SECONDS`, with a five-minute minimum), prunes expired dates, requests only missing date/source ranges, and preserves one source when the other API is unavailable. A location or schema change rebuilds the cache. Weather and marine records contain per-day summary statistics and sample counts.
+
+The service provides `GET /history` on port 8080 to other Compose services; the port is not published to the host. Node-RED reads it every minute for the six seven-day charts. Cache values summarize archived model forecasts and are not harbor observations. Generated cache data is ignored by Git.
+
+## Deployment and verification notes
+
+On a clean Node-RED data volume, `node-red/start.sh` installs pinned production dependencies from `node-red/package-lock.json` before executing the Node-RED entrypoint. The clean isolated Compose verification started all four services, connected Node-RED to Mosquitto, received simulator telemetry, populated 7/7 weather and marine cache days, and returned HTTP 200 from all three dashboard routes. This check was performed on 2026-11-03; the running user instance and its local data were not part of the isolated check.

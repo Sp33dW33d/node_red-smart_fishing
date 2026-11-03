@@ -9,6 +9,9 @@ node-red/node_modules/
 node-red/.npm/
 node-red/.sessions.json
 
+# Node-RED flow editor backup generated during deployments
+flows/.smart-fishing.json.backup
+
 # Mosquitto runtime data is stored in a Docker named volume; keep any local overrides out of Git
 mosquitto/data/
 mosquitto/log/
